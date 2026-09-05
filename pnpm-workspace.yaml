@@ -1,0 +1,7 @@
+packages:
+  - "apps/web"
+
+# Allow build scripts only for dependencies we trust to run postinstall.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  MU Voice Studio theme — premium, minimalist finance/AI.
+  Dark charcoal ground, off-white text, deep emerald primary, muted gold accent.
+  Dark-first: the default (:root) is dark; `.light` provides a light variant.
+*/
+
+:root {
+  --background: 222 16% 8%;
+  --foreground: 40 20% 92%;
+
+  --card: 222 15% 11%;
+  --card-foreground: 40 20% 92%;
+
+  --popover: 222 16% 10%;
+  --popover-foreground: 40 20% 92%;
+
+  --primary: 158 58% 42%;
+  --primary-foreground: 150 30% 97%;
+
+  --secondary: 222 12% 18%;
+  --secondary-foreground: 40 20% 92%;
+
+  --muted: 222 12% 15%;
+  --muted-foreground: 40 8% 62%;
+
+  --accent: 222 12% 18%;
+  --accent-foreground: 40 20% 92%;
+
+  --gold: 42 55% 58%;
+  --gold-foreground: 42 45% 8%;
+
+  --destructive: 0 62% 47%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 222 12% 20%;
+  --input: 222 12% 20%;
+  --ring: 158 58% 42%;
+
+  --radius: 0.6rem;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+.light {
+  --background: 40 30% 97%;
+  --foreground: 222 20% 12%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 222 20% 12%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 20% 12%;
+
+  --primary: 158 58% 36%;
+  --primary-foreground: 150 30% 98%;
+
+  --secondary: 40 16% 92%;
+  --secondary-foreground: 222 20% 12%;
+
+  --muted: 40 16% 92%;
+  --muted-foreground: 222 10% 40%;
+
+  --accent: 40 16% 92%;
+  --accent-foreground: 222 20% 12%;
+
+  --gold: 42 60% 42%;
+  --gold-foreground: 42 45% 98%;
+
+  --destructive: 0 70% 45%;
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 222 12% 86%;
+  --input: 222 12% 86%;
+  --ring: 158 58% 36%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Thin, unobtrusive scrollbars that suit the dark theme. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
