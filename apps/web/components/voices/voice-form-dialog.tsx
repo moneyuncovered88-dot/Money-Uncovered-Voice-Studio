@@ -25,6 +25,8 @@ interface VoiceFormDialogProps {
   onSaved: () => void;
 }
 
+const ACCEPT = ".wav,.mp3,.m4a,.flac";
+
 export function VoiceFormDialog({ trigger, voice, onSaved }: VoiceFormDialogProps) {
   const isEdit = Boolean(voice);
   const [open, setOpen] = useState(false);
@@ -38,6 +40,9 @@ export function VoiceFormDialog({ trigger, voice, onSaved }: VoiceFormDialogProp
   const [useCase, setUseCase] = useState(voice?.use_case ?? "");
   const [notes, setNotes] = useState(voice?.notes ?? "");
   const [authorized, setAuthorized] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
+  const hasReference = Boolean(voice?.reference_audio_path);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -56,13 +61,18 @@ export function VoiceFormDialog({ trigger, voice, onSaved }: VoiceFormDialogProp
         use_case: useCase || null,
         notes: notes || null,
       };
-      if (isEdit && voice) {
-        await api.voices.update(voice.id, payload);
-      } else {
-        await api.voices.create({ ...payload, authorization_confirmed: true });
+      const saved =
+        isEdit && voice
+          ? await api.voices.update(voice.id, payload)
+          : await api.voices.create({ ...payload, authorization_confirmed: true });
+
+      if (file) {
+        await api.voices.uploadReference(saved.id, file);
       }
+
       toast.success(isEdit ? "Voice updated" : "Voice added");
       setOpen(false);
+      setFile(null);
       onSaved();
     } catch (err) {
       toast.error(err instanceof ApiRequestError ? err.message : "Could not save voice");
@@ -78,8 +88,8 @@ export function VoiceFormDialog({ trigger, voice, onSaved }: VoiceFormDialogProp
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit voice" : "Add voice"}</DialogTitle>
           <DialogDescription>
-            Reference-audio upload arrives in the Voice Management phase. For now, save the voice
-            profile details.
+            Upload a 5&ndash;30 second reference recording of the narrator you&apos;re authorized to
+            use.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -127,6 +137,26 @@ export function VoiceFormDialog({ trigger, voice, onSaved }: VoiceFormDialogProp
               />
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="v-file">Reference recording</Label>
+            <Input
+              id="v-file"
+              type="file"
+              accept={ACCEPT}
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="cursor-pointer file:mr-3 file:rounded file:border-0 file:bg-secondary file:px-2 file:py-1 file:text-sm"
+            />
+            <p className="text-xs text-muted-foreground">
+              WAV, MP3, M4A, or FLAC · up to 25&nbsp;MB.{" "}
+              {isEdit
+                ? hasReference
+                  ? "A reference is already uploaded — choosing a file replaces it."
+                  : "No reference uploaded yet."
+                : "Optional now; you can add it later."}
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="v-notes">Notes</Label>
             <Textarea id="v-notes" value={notes} onChange={(e) => setNotes(e.target.value)} />

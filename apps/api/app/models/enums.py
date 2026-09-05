@@ -6,10 +6,10 @@ string values in `apps/web/types/domain.ts`.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class GenerationStatus(str, Enum):
+class GenerationStatus(StrEnum):
     DRAFT = "draft"
     QUEUED = "queued"
     PREPROCESSING = "preprocessing"
@@ -22,7 +22,7 @@ class GenerationStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class ChunkStatus(str, Enum):
+class ChunkStatus(StrEnum):
     WAITING = "waiting"
     QUEUED = "queued"
     GENERATING = "generating"
@@ -30,13 +30,13 @@ class ChunkStatus(str, Enum):
     FAILED = "failed"
 
 
-class JobType(str, Enum):
+class JobType(StrEnum):
     PREVIEW = "preview"
     FULL = "full"
     REGENERATE = "regenerate"
     ASSEMBLE = "assemble"
 
 
-class OutputFormat(str, Enum):
+class OutputFormat(StrEnum):
     MP3 = "mp3"
     WAV = "wav"

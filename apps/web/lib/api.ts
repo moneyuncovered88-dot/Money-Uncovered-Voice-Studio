@@ -90,6 +90,29 @@ export const api = {
       apiFetch<Voice>(`/voices/${id}`, { method: "PATCH", body: json(body) }),
     remove: (id: string) =>
       apiFetch<{ id: string; deleted: boolean }>(`/voices/${id}`, { method: "DELETE" }),
+    uploadReference: async (id: string, file: File): Promise<Voice> => {
+      const token = await getAccessToken();
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch(`${API_URL}/api/voices/${id}/reference`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: form,
+        cache: "no-store",
+      });
+      if (!res.ok) {
+        let message = `Upload failed (${res.status})`;
+        try {
+          const body = await res.json();
+          message = body?.error?.message ?? message;
+        } catch {
+          // non-JSON
+        }
+        throw new ApiRequestError(message, res.status);
+      }
+      return (await res.json()) as Voice;
+    },
+    referenceUrl: (id: string) => apiFetch<{ url: string }>(`/voices/${id}/reference-url`),
   },
   pronunciations: {
     list: () => apiFetch<Pronunciation[]>("/pronunciations"),

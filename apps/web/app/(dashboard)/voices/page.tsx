@@ -1,12 +1,13 @@
 "use client";
 
-import { CheckCircle2, Mic2, Pencil, Play, Plus, Trash2 } from "lucide-react";
+import { CheckCircle2, Mic2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { VoiceFormDialog } from "@/components/voices/voice-form-dialog";
+import { VoicePlayButton } from "@/components/voices/voice-play-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -105,13 +106,15 @@ export default function VoicesPage() {
                   <div>Added {formatDate(voice.created_at)}</div>
                   <div>
                     Reference:{" "}
-                    {voice.reference_audio_path ? "uploaded" : "not uploaded yet"}
+                    {voice.reference_audio_path
+                      ? voice.reference_duration_seconds
+                        ? `${Math.round(voice.reference_duration_seconds)}s uploaded`
+                        : "uploaded"
+                      : "not uploaded yet"}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 pt-2">
-                  <Button variant="outline" size="sm" disabled title="Available after Phase 2">
-                    <Play className="h-4 w-4" /> Play
-                  </Button>
+                  <VoicePlayButton voiceId={voice.id} disabled={!voice.reference_audio_path} />
                   <VoiceFormDialog
                     voice={voice}
                     trigger={
