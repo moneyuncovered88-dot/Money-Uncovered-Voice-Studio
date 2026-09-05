@@ -22,9 +22,13 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY requirements.txt ./
+# Paths are relative to the REPO ROOT, because RunPod's GitHub builder uses the
+# repository root as the Docker build context (with this Dockerfile referenced
+# by path). This also works with `docker build -f services/tts-worker/Dockerfile .`
+# from the repo root.
+COPY services/tts-worker/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY services/tts-worker/ ./
 
 CMD ["python", "-u", "worker.py"]
