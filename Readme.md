@@ -72,8 +72,7 @@ money-uncovered-voice-studio/
 │     └─ tests/           pytest (pure logic)
 ├─ services/
 │  └─ tts-worker/         RunPod GPU worker (Chatterbox) — Phase 4
-├─ supabase/
-│  └─ migrations/         SQL: schema, RLS, storage, triggers
+├─ supabase/             (SQL migrations delivered separately, not committed)
 ├─ packages/shared/       shared-contract notes
 ├─ docs/                  setup + architecture guides
 ├─ .env.example
@@ -119,14 +118,14 @@ Leave `TTS_PROVIDER=mock` until the GPU worker phase.
 
 ### 4. Database
 
-Run the SQL migrations in order (see [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md)):
+The SQL migrations are **not stored in this repo** — they are provided directly by
+the project owner. Run them in the Supabase **SQL Editor** in order:
 
 ```
-supabase/migrations/0001_init.sql
-supabase/migrations/0002_rls.sql
-supabase/migrations/0003_storage.sql
-supabase/migrations/0004_profile_trigger.sql
+0001 schema  →  0002 RLS  →  0003 storage buckets  →  0004 profile trigger
 ```
+
+See [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) for details.
 
 ### 5. Run it
 

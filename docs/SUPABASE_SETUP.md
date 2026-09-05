@@ -27,17 +27,15 @@ Never expose `service_role` or the JWT secret to the browser.
 
 ## 3. Run the migrations (in order)
 
-Open **SQL Editor** in the dashboard and run each file's contents, in this order:
+The SQL is **not stored in this repo** — the project owner provides it directly. In
+the dashboard's **SQL Editor**, run each migration's contents in this order:
 
-1. `supabase/migrations/0001_init.sql` — enums, tables, indexes, `updated_at` triggers
-2. `supabase/migrations/0002_rls.sql` — Row Level Security policies
-3. `supabase/migrations/0003_storage.sql` — private buckets + object policies
-4. `supabase/migrations/0004_profile_trigger.sql` — auto-create a profile per new user
+1. **0001 — schema:** enums, tables, indexes, `updated_at` triggers
+2. **0002 — RLS:** Row Level Security policies
+3. **0003 — storage:** private buckets + object policies
+4. **0004 — profile trigger:** auto-create a profile per new user
 
-**Order matters** — RLS and storage policies reference tables created in `0001`.
-
-> Prefer the CLI? Install the Supabase CLI, `supabase link` your project, drop these
-> files into your local `supabase/migrations`, and `supabase db push`.
+**Order matters** — RLS and storage policies reference tables created in step 1.
 
 ### Verify
 

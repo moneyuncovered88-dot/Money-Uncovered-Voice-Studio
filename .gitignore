@@ -11,6 +11,9 @@
 *.pem
 *.key
 
+# SQL is delivered in chat, never committed to the repo (owner preference).
+*.sql
+
 # Node / Next.js
 node_modules/
 .pnpm-store/
