@@ -2,13 +2,14 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { AudioLines, Check, Loader2, ListChecks, Play, Zap } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { StatusBadge } from "@/components/common/status-badge";
+import { GenerationPanel } from "@/components/projects/generation-panel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -170,55 +171,28 @@ export default function ProjectDetailPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Chunks</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EmptyState
-                icon={ListChecks}
-                title="No chunks yet"
-                description="Generate the narration to split the script into chunks you can preview and regenerate individually."
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Final narration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <EmptyState
-                icon={AudioLines}
-                title="No audio yet"
-                description="Once generation completes, the assembled narration plays here with MP3 / WAV export."
-              />
-            </CardContent>
-          </Card>
+          <GenerationPanel projectId={projectId} onProjectChange={setProject} />
         </div>
 
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Generate</CardTitle>
+              <CardTitle>Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <dl className="space-y-2 text-sm">
-                <Row label="Voice" value={voices.find((v) => v.id === project.voice_profile_id)?.name ?? "None selected"} />
+                <Row
+                  label="Voice"
+                  value={
+                    voices.find((v) => v.id === project.voice_profile_id)?.name ?? "None selected"
+                  }
+                />
                 <Row label="Words" value={project.word_count.toLocaleString()} />
-                <Row label="Est. duration" value={`~${formatDuration(project.estimated_duration_seconds)}`} />
+                <Row
+                  label="Est. duration"
+                  value={`~${formatDuration(project.estimated_duration_seconds)}`}
+                />
               </dl>
-              <div className="grid grid-cols-2 gap-2 pt-1">
-                <Button variant="outline" disabled title="Available after Phase 4 (TTS worker)">
-                  <Play className="h-4 w-4" /> Preview
-                </Button>
-                <Button variant="gold" disabled title="Available after Phase 4 (TTS worker)">
-                  <Zap className="h-4 w-4" /> Generate
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Generation connects to the RunPod GPU worker in a later phase.
-              </p>
             </CardContent>
           </Card>
 

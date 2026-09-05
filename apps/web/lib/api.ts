@@ -7,7 +7,12 @@
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type {
+  AudioUrls,
+  Chunk,
+  GenerationStatusResponse,
+  Job,
   Preset,
+  PreviewResponse,
   Project,
   ProjectListItem,
   Pronunciation,
@@ -127,6 +132,22 @@ export const api = {
         method: "POST",
         body: json({ text }),
       }),
+  },
+  generation: {
+    preview: (id: string) =>
+      apiFetch<PreviewResponse>(`/projects/${id}/preview`, { method: "POST" }),
+    generate: (id: string) => apiFetch<Job>(`/projects/${id}/generate`, { method: "POST" }),
+    status: (id: string) => apiFetch<GenerationStatusResponse>(`/projects/${id}/status`),
+    chunks: (id: string) => apiFetch<Chunk[]>(`/projects/${id}/chunks`),
+    assemble: (id: string) => apiFetch<Project>(`/projects/${id}/assemble`, { method: "POST" }),
+    audio: (id: string) => apiFetch<AudioUrls>(`/projects/${id}/audio`),
+    regenerateChunk: (chunkId: string, text?: string | null) =>
+      apiFetch<Chunk>(`/chunks/${chunkId}/regenerate`, {
+        method: "POST",
+        body: json({ text: text ?? null }),
+      }),
+    chunkAudioUrl: (chunkId: string) =>
+      apiFetch<{ url: string }>(`/chunks/${chunkId}/audio-url`),
   },
   config: {
     presets: () => apiFetch<Preset[]>("/config/presets"),

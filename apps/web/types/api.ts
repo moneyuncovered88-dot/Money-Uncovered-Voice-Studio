@@ -1,6 +1,6 @@
 /** API response/request shapes — mirror the FastAPI schemas. */
 
-import type { GenerationStatus } from "./domain";
+import type { ChunkStatus, GenerationStatus } from "./domain";
 
 export interface Project {
   id: string;
@@ -103,6 +103,51 @@ export interface ScriptAnalysis {
   character_count: number;
   estimated_duration_seconds: number;
   chunk_count: number;
+}
+
+export interface Chunk {
+  id: string;
+  chunk_index: number;
+  processed_text: string;
+  status: ChunkStatus;
+  duration_seconds: number | null;
+  start_time_seconds: number | null;
+  end_time_seconds: number | null;
+  generation_attempt: number;
+  error_message: string | null;
+}
+
+export interface Job {
+  id: string;
+  project_id: string;
+  type: string;
+  status: GenerationStatus;
+  total_chunks: number;
+  completed_chunks: number;
+  failed_chunks: number;
+  progress_percentage: number;
+  error_message: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface GenerationStatusResponse {
+  job: Job | null;
+  total_chunks: number;
+  generated_chunks: number;
+  failed_chunks: number;
+}
+
+export interface PreviewResponse {
+  url: string;
+  duration_seconds: number;
+}
+
+export interface AudioUrls {
+  mp3_url?: string | null;
+  wav_url?: string | null;
+  duration_seconds?: number | null;
 }
 
 export interface ApiError {
