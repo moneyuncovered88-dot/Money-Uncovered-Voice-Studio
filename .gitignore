@@ -41,16 +41,17 @@ htmlcov/
 coverage.xml
 
 # TTS / ML model weights & caches (never commit large weights)
+# NOTE: do not use a bare `models/` here — it would also ignore the backend's
+# source dir apps/api/app/models. Weight *files* are covered by extensions.
 *.ckpt
 *.safetensors
 *.bin
 *.pt
 *.pth
-models/
 model_cache/
-.cache/
 hf_cache/
 huggingface/
+services/tts-worker/models/
 
 # Audio artifacts (voice references & generated narration are private data)
 *.wav
