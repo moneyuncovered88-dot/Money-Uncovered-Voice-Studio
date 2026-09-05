@@ -49,6 +49,14 @@ def create_signed_url(client: Client, bucket: str, path: str, expires_in: int) -
     return url
 
 
+def download_bytes(client: Client, bucket: str, path: str) -> bytes:
+    """Download an object's bytes (service role bypasses RLS)."""
+    try:
+        return client.storage.from_(bucket).download(path)
+    except Exception as exc:
+        raise UpstreamError(f"Storage download failed: {exc}", code="storage_error") from exc
+
+
 def remove(client: Client, bucket: str, path: str) -> None:
     """Delete an object; ignore if it's already gone."""
     try:

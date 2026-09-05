@@ -1,48 +1,39 @@
-# TTS Worker (RunPod Serverless) — Phase 4
+# TTS Worker (RunPod Serverless) — Chatterbox-Turbo
 
-This directory will hold the GPU worker that runs **Resemble AI Chatterbox-Turbo**.
-It is intentionally **not implemented in Phase 1** — per the build plan, GPU
-inference comes only after the core application foundation is stable.
+GPU worker that runs **Resemble AI Chatterbox-Turbo** (MIT license). The backend
+dispatches one chunk per request; the model is loaded **once per warm worker**.
 
-## Planned structure
-
+## Files
 ```
-services/tts-worker/
-├─ Dockerfile          # CUDA base + Python + FFmpeg + Torch + Chatterbox
-├─ requirements.txt    # pinned worker deps (separate from the backend pyproject)
-├─ worker.py           # RunPod serverless handler (entrypoint)
-├─ model.py            # load Chatterbox ONCE per worker; generate()
-├─ audio.py            # output validation / format helpers
-├─ storage.py          # fetch reference voice, upload generated chunk (Supabase)
-├─ config.py           # env parsing
-└─ tests/              # request validation, audio output, error handling
+config.py        env config (device, nano, model name, max text)
+request.py       pure request parsing/validation (unit-tested)
+model.py         loads ChatterboxTurboTTS once; signature-filtered generate()
+audio.py         torch waveform -> WAV bytes
+worker.py        RunPod serverless handler (entrypoint)
+Dockerfile       CUDA/PyTorch base + ffmpeg + chatterbox-tts + runpod
+requirements.txt chatterbox-tts, runpod
+tests/           request-validation tests (run without a GPU)
 ```
 
-## Responsibilities
-1. Start; load the Chatterbox model **once per worker lifecycle** (never per chunk).
-2. Receive a generation request (see the contract in `docs/RUNPOD_SETUP.md`).
-3. Resolve + cache the reference voice within the worker lifecycle.
-4. Synthesize audio for the chunk.
-5. Upload the output to Supabase Storage (private).
-6. Return metadata (status, duration, sample rate, path, timing, errors).
-7. Clean up temporary files.
+## Contract
+See `docs/RUNPOD_SETUP.md` for the exact request/response JSON. In short: the
+backend sends `text`, the reference audio as base64, and validated `settings`;
+the worker returns `audio_b64` (WAV) + `sample_rate` + `duration_seconds`.
 
-## Before writing any code (required)
-Inspect the **current** official Chatterbox implementation
-(GitHub: `resemble-ai/chatterbox`) and confirm, without inventing anything:
-- the exact package / model id and how the model is loaded,
-- the real inference call and its **supported** parameters (e.g. exaggeration,
-  cfg/guidance, temperature, seed) and their valid ranges,
-- the recommended reference-audio length,
-- the output sample rate and format,
-- GPU/VRAM requirements and cold-start behavior,
-- the license.
+`model.py` introspects the real `generate()` signature and forwards only the
+kwargs the installed model version accepts — so unsupported controls are never
+sent. Confirmed controls: `exaggeration`, `cfg_weight`. Optional (best-effort):
+`temperature`, `seed`.
 
-Reconcile the provider control specs in
-`apps/api/app/services/tts/chatterbox.py` with what the model actually supports, and
-record any limitations in `docs/RUNPOD_SETUP.md`. The UI shows only the controls the
-provider reports, so keeping the provider honest keeps the UI honest.
+## Run the pure tests (no GPU needed)
+```bash
+cd services/tts-worker
+python -m pytest
+```
 
-## Model weights
-Do not commit weights to git. Choose one of: download-on-cold-start, bake-into-image,
-or RunPod network volume — and document the tradeoff (see `docs/RUNPOD_SETUP.md`).
+## Build & deploy
+Follow `docs/RUNPOD_SETUP.md`. Before the first build, **verify** the Dockerfile
+base image tag matches your GPU's CUDA and that `chatterbox-tts` doesn't fight
+the base image's torch build (comments in the Dockerfile explain the options).
+Model weights download from Hugging Face on cold start — use a RunPod network
+volume (`HF_HOME`) or bake them in to speed cold starts.

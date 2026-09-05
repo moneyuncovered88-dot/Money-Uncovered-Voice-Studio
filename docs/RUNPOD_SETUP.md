@@ -74,44 +74,64 @@ Check `GET /health/tts` → `runpod_configured: true`.
 
 ## Request / response contract
 
+This is the **actual** contract implemented by `services/tts-worker/worker.py`
+and the backend's `ChatterboxProvider`. The reference audio is sent inline as
+base64 (the worker stays stateless and needs no Supabase credentials); the
+backend uploads the returned audio to Storage itself.
+
 **Request (`input`)** the backend sends per chunk:
 ```jsonc
 {
-  "job_id": "uuid",
-  "chunk_id": "uuid",
   "text": "processed chunk text",
-  "voice_reference": { "storage_path": "voice-references/<user>/<voice>.wav" },
-  "settings": { /* validated, provider-supported controls only */ },
-  "model_name": "chatterbox-turbo",
+  "voice_reference_b64": "<base64 of the reference wav/mp3>",  // may be null
+  "voice_reference_ext": "wav",
+  "voice_id": "uuid",            // for future conditional caching in the worker
+  "settings": {                  // validated; worker forwards only kwargs the
+    "exaggeration": 0.5,         // model's generate() actually accepts
+    "cfg_weight": 0.5,
+    "temperature": 0.8,
+    "seed": 0
+  },
   "output_format": "wav"
 }
 ```
-The backend passes **secure storage references** (short-lived signed URL or path the
-worker resolves with its own credentials), not public URLs.
 
 **Response** the worker returns:
 ```jsonc
 {
-  "status": "completed",           // or "failed"
-  "chunk_id": "uuid",
-  "audio_path": "generated-chunks/<user>/<project>/<index>.wav",
-  "duration_seconds": 18.42,
+  "status": "completed",         // or "failed"
+  "audio_b64": "<base64 wav>",
   "sample_rate": 24000,
+  "duration_seconds": 18.42,
   "generation_ms": 1234,
   "model_name": "chatterbox-turbo",
   "error": null
 }
 ```
 
-## Chatterbox specifics — verify in Phase 4
-Before writing worker code, inspect the **current** official implementation
-(GitHub: `resemble-ai/chatterbox`) and confirm: the pip package / model id, exact
-inference call, the **real** supported controls (e.g. exaggeration, cfg/guidance,
-temperature, seed), the reference-audio length it recommends, the output sample
-rate, GPU/VRAM requirements, and the license. **Only expose controls the model
-actually supports** — the UI reads them from `GET /api/config/voice-controls`, which
-is sourced from the provider, so it will reflect reality automatically. Record any
-limitations you discover back into this file.
+## Chatterbox specifics (verified against the official project)
+Confirmed from the official GitHub/Hugging Face/Resemble AI sources:
+
+- **Package:** `pip install chatterbox-tts`.
+- **Model class:** `ChatterboxTurboTTS.from_pretrained(device="cuda", nano=False)`
+  (350M Turbo). `nano=True` is a 110M CPU-capable variant. Weights:
+  `ResembleAI/chatterbox-turbo` on Hugging Face (downloaded on first run).
+- **Inference:** `model.generate(text, audio_prompt_path=..., language_id=...,
+  exaggeration=0.5, cfg_weight=0.5)` returns a `torch.Tensor` at `model.sr`
+  (24 kHz). Reference clip ~5–10 seconds.
+- **Controls:** `exaggeration` and `cfg_weight` are documented. `temperature`
+  and `seed` are **not** guaranteed in the signature — so the worker
+  (`model.py`) introspects `generate()` and passes only supported kwargs, and
+  seeds `torch`/`numpy` itself when a seed is given. The UI reads controls from
+  `GET /api/config/voice-controls` (sourced from the provider), so it always
+  reflects what's actually supported.
+- **License:** MIT — commercial use, self-hosting, and shipping to production
+  are allowed. Output carries Resemble's audio watermark.
+- **VRAM:** Turbo is lighter than the original model (distilled 1-step decoder).
+  Exact VRAM isn't published — start with a ~16 GB GPU and tune down.
+
+If you upgrade the model version, re-check the `generate()` signature and update
+`ChatterboxProvider.get_supported_controls()` if the real controls change.
 
 ## Cost tips
 - Keep **idle timeout** short and **active workers** at 0.

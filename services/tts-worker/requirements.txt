@@ -1,0 +1,5 @@
+# RunPod serverless worker for Chatterbox-Turbo.
+# NOTE: chatterbox-tts pulls torch/torchaudio + transformers. Make sure the
+# base image's CUDA/torch build is compatible (see Dockerfile comments).
+chatterbox-tts
+runpod>=1.6.0
