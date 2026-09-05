@@ -11,8 +11,10 @@ RUN apt-get update \
 WORKDIR /app
 
 # Install Python dependencies from pyproject (needs the package sources present).
+# NOTE: app/ must include app/models — ensure it is committed (build rev 2).
 COPY pyproject.toml ./
 COPY app ./app
+RUN test -f app/models/enums.py  # fail fast if app/models is missing from the build
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir .
 
