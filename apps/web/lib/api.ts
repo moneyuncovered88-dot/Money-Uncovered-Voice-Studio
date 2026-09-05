@@ -148,6 +148,7 @@ export const api = {
       }),
     chunkAudioUrl: (chunkId: string) =>
       apiFetch<{ url: string }>(`/chunks/${chunkId}/audio-url`),
+    history: () => apiFetch<Job[]>("/jobs"),
   },
   config: {
     presets: () => apiFetch<Preset[]>("/config/presets"),

@@ -9,6 +9,7 @@ any provider — the mock provider makes the whole flow runnable without a GPU.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
 from typing import Any
 
 from starlette.concurrency import run_in_threadpool
@@ -175,6 +176,7 @@ async def process_job(job_id: str, user_id: str) -> None:
         total = len(chunks)
         completed = 0
         failed = 0
+        total_ms = 0
 
         for chunk in chunks:
             if chunk.get("status") == "generated" and chunk.get("audio_path"):
@@ -183,9 +185,10 @@ async def process_job(job_id: str, user_id: str) -> None:
                 continue
 
             chunks_service.update_chunk(client, chunk["id"], {"status": "generating"})
-            ok, err = await _generate_chunk(
+            ok, err, ms = await _generate_chunk(
                 client, user_id, project_id, provider, voice, chunk, controls
             )
+            total_ms += ms
             if ok:
                 completed += 1
             else:
@@ -196,10 +199,8 @@ async def process_job(job_id: str, user_id: str) -> None:
             _progress(client, job_id, total, completed, failed)
 
         if failed > 0:
-            jobs_service.update_job(
-                client,
-                job_id,
-                {"status": "failed", "error_message": f"{failed} chunk(s) failed to generate."},
+            _finalize_job(
+                client, job_id, "failed", total_ms, f"{failed} chunk(s) failed to generate."
             )
             projects_service.update_project(client, user_id, project_id, {"status": "failed"})
             return
@@ -207,19 +208,36 @@ async def process_job(job_id: str, user_id: str) -> None:
         # All chunks generated -> assemble the final audio.
         jobs_service.update_job(client, job_id, {"status": "assembling"})
         projects_service.update_project(client, user_id, project_id, {"status": "assembling"})
-        await run_in_threadpool(
-            _assemble, client, user_id, project_id, gap_seconds, normalize
-        )
-        jobs_service.update_job(
-            client, job_id, {"status": "completed", "progress_percentage": 100}
-        )
+        await run_in_threadpool(_assemble, client, user_id, project_id, gap_seconds, normalize)
+        _finalize_job(client, job_id, "completed", total_ms)
     except Exception as exc:  # noqa: BLE001 - a job must never die silently
         logger.exception("job_failed", extra={"job_id": job_id, "project_id": project_id})
-        jobs_service.update_job(client, job_id, {"status": "failed", "error_message": str(exc)})
+        _finalize_job(client, job_id, "failed", 0, str(exc))
         try:
             projects_service.update_project(client, user_id, project_id, {"status": "failed"})
         except Exception:
             pass
+
+
+def _finalize_job(
+    client: Client, job_id: str, status: str, total_ms: int, error: str | None = None
+) -> None:
+    """Record final status + generation time and an informational cost estimate."""
+    settings = get_settings()
+    gpu_seconds = round(total_ms / 1000.0, 2)
+    cost = round(gpu_seconds / 3600.0 * settings.gpu_cost_per_hour, 4)
+    data: dict[str, Any] = {
+        "status": status,
+        "generation_ms": total_ms,
+        "gpu_seconds": gpu_seconds,
+        "estimated_cost": cost,
+        "completed_at": datetime.now(UTC).isoformat(),
+    }
+    if status == "completed":
+        data["progress_percentage"] = 100
+    if error:
+        data["error_message"] = error
+    jobs_service.update_job(client, job_id, data)
 
 
 async def _generate_chunk(
@@ -230,7 +248,7 @@ async def _generate_chunk(
     voice: Any,
     chunk: dict[str, Any],
     controls: dict[str, Any],
-) -> tuple[bool, str | None]:
+) -> tuple[bool, str | None, int]:
     last_err: str | None = None
     for attempt in range(1, _MAX_ATTEMPTS + 1):
         try:
@@ -259,12 +277,12 @@ async def _generate_chunk(
                     "settings": controls,
                 },
             )
-            return True, None
+            return True, None, int(result.generation_ms or 0)
         except Exception as exc:  # noqa: BLE001 - retry with backoff
             last_err = str(exc)
             if attempt < _MAX_ATTEMPTS:
                 await asyncio.sleep(min(2**attempt, 8))
-    return False, last_err
+    return False, last_err, 0
 
 
 def _progress(client: Client, job_id: str, total: int, completed: int, failed: int) -> None:

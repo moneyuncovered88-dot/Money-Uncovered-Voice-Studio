@@ -127,6 +127,10 @@ export interface Job {
   failed_chunks: number;
   progress_percentage: number;
   error_message: string | null;
+  model_name: string | null;
+  generation_ms: number | null;
+  gpu_seconds: number | null;
+  estimated_cost: number | null;
   created_at: string;
   started_at: string | null;
   completed_at: string | null;

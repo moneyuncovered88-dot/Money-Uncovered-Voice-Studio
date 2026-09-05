@@ -31,6 +31,10 @@ class JobOut(BaseModel):
     failed_chunks: int = 0
     progress_percentage: float = 0
     error_message: str | None = None
+    model_name: str | None = None
+    generation_ms: int | None = None
+    gpu_seconds: float | None = None
+    estimated_cost: float | None = None
     created_at: datetime
     started_at: datetime | None = None
     completed_at: datetime | None = None

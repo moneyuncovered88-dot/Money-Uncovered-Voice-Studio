@@ -15,9 +15,14 @@ from app.schemas.generation import (
     StatusResponse,
 )
 from app.schemas.project import ProjectOut
-from app.services import chunks_service, generation_service
+from app.services import chunks_service, generation_service, jobs_service
 
 router = APIRouter(tags=["generation"])
+
+
+@router.get("/jobs", response_model=list[JobOut])
+def list_generation_history(user: CurrentUserDep, client: SupabaseDep) -> list[dict]:
+    return jobs_service.list_jobs(client, user.id)
 
 
 @router.post("/projects/{project_id}/preview", response_model=PreviewResponse)
