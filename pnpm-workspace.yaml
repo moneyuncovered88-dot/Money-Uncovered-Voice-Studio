@@ -1,7 +1,9 @@
 packages:
   - "apps/web"
 
-# Allow build scripts only for dependencies we trust to run postinstall.
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
+# pnpm 11 requires an explicit decision for dependencies with postinstall build
+# scripts; an undecided one fails `pnpm install` (locally and on Vercel).
+allowBuilds:
+  esbuild: true
+  sharp: false
+  unrs-resolver: true
