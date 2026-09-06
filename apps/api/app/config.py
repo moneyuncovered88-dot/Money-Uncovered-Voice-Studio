@@ -50,6 +50,11 @@ class Settings(BaseSettings):
     runpod_api_key: str = ""
     runpod_endpoint_id: str = ""
 
+    # Modal (alternative GPU host). Endpoint URL from `modal deploy`, plus a
+    # shared token the worker checks against its MU_TTS_TOKEN secret.
+    modal_endpoint_url: str = ""
+    modal_token: str = ""
+
     # Storage
     signed_url_expiry: int = 3600
 

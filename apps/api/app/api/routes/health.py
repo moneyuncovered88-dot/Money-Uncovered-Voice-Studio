@@ -31,5 +31,6 @@ def health_tts() -> dict[str, object]:
         "provider": settings.tts_provider,
         "model_name": settings.model_name,
         "runpod_configured": runpod_configured,
+        "modal_configured": bool(settings.modal_endpoint_url),
         "max_chunk_chars": settings.tts_max_chunk_chars,
     }

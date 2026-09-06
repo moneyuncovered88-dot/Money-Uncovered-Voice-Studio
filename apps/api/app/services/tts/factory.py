@@ -33,8 +33,14 @@ def get_tts_provider() -> TTSProvider:
     if provider == "chatterbox":
         return ChatterboxProvider(model_name=settings.model_name)
 
+    if provider == "modal":
+        # Same Chatterbox contract, but dispatched to a Modal web endpoint.
+        from app.services.modal_client import run_sync as modal_run
+
+        return ChatterboxProvider(model_name=settings.model_name, runner=modal_run)
+
     raise AppError(
-        f"Unknown TTS_PROVIDER '{settings.tts_provider}'. Use 'mock' or 'chatterbox'.",
+        f"Unknown TTS_PROVIDER '{settings.tts_provider}'. Use 'mock', 'chatterbox', or 'modal'.",
         code="unknown_provider",
         status_code=500,
     )
