@@ -1,4 +1,4 @@
-# MU Voice Studio — FastAPI backend
+# MUS Voices — FastAPI backend
 # Python 3.12 (stable wheels) + FFmpeg (needed for audio assembly in later phases).
 
 FROM python:3.12-slim

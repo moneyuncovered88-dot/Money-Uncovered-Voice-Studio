@@ -1,7 +1,7 @@
 [project]
 name = "mu-voice-api"
 version = "0.1.0"
-description = "MU Voice Studio — FastAPI orchestration backend."
+description = "MUS Voices — FastAPI orchestration backend."
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115.0",

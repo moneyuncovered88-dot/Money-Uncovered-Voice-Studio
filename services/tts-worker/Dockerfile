@@ -1,4 +1,4 @@
-# MU Voice Studio — Chatterbox-Turbo RunPod worker
+# MUS Voices — Chatterbox RunPod worker
 #
 # IMPORTANT (verify during RunPod setup, do not assume):
 #   * Confirm this base image tag exists and matches the CUDA version your

@@ -1,4 +1,4 @@
-"""RunPod serverless entrypoint for MU Voice Studio TTS.
+"""RunPod serverless entrypoint for MUS Voices TTS.
 
 Request  (job["input"]): see request.GenRequest and docs/RUNPOD_SETUP.md.
 Response: {status, audio_b64, sample_rate, duration_seconds, generation_ms,

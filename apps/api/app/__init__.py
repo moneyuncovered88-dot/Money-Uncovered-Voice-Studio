@@ -1,3 +1,3 @@
-"""MU Voice Studio — FastAPI orchestration backend."""
+"""MUS Voices — FastAPI orchestration backend."""
 
 __version__ = "0.1.0"

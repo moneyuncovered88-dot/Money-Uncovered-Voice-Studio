@@ -10,7 +10,7 @@ export function Brand({ className }: { className?: string }) {
         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-gold" />
       </span>
       <span className="flex flex-col leading-none">
-        <span className="text-sm font-semibold tracking-tight">MU Voice Studio</span>
+        <span className="text-sm font-semibold tracking-tight">MUS Voices</span>
         <span className="text-[11px] text-muted-foreground">Money Uncovered</span>
       </span>
     </Link>

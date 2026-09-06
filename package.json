@@ -2,7 +2,7 @@
   "name": "money-uncovered-voice-studio",
   "version": "0.1.0",
   "private": true,
-  "description": "MU Voice Studio — private long-form TTS narration studio for the Money Uncovered YouTube channel.",
+  "description": "MUS Voices — long-form AI TTS narration studio.",
   "packageManager": "pnpm@11.25.0",
   "engines": {
     "node": ">=20.0.0"

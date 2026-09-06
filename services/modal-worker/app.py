@@ -1,4 +1,4 @@
-"""Modal worker for MU Voice Studio — Chatterbox TTS on a free-tier GPU.
+"""Modal worker for MUS Voices — Chatterbox TTS on a free-tier GPU.
 
 Deploy:
     pip install modal

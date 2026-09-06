@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(
-        title="MU Voice Studio API",
+        title="MUS Voices API",
         version=__version__,
         lifespan=lifespan,
     )
@@ -66,7 +66,7 @@ def create_app() -> FastAPI:
 
     @app.get("/")
     def root() -> dict[str, str]:
-        return {"service": "mu-voice-studio-api", "version": __version__}
+        return {"service": "mus-voices-api", "version": __version__}
 
     return app
 

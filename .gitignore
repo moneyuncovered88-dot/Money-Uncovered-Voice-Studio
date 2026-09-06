@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# MU Voice Studio — root .gitignore
+# MUS Voices — root .gitignore
 # Never commit secrets, generated audio, voice recordings, or model caches.
 # ---------------------------------------------------------------------------
 

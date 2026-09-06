@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MU Voice Studio",
-  description: "Private long-form narration studio for the Money Uncovered YouTube channel.",
+  title: "MUS Voices",
+  description: "MUS Voices — long-form AI narration studio.",
 };
 
 export default function RootLayout({
