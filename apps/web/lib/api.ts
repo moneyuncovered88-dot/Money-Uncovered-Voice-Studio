@@ -139,6 +139,10 @@ export const api = {
     preview: (id: string) =>
       apiFetch<PreviewResponse>(`/projects/${id}/preview`, { method: "POST" }),
     generate: (id: string) => apiFetch<Job>(`/projects/${id}/generate`, { method: "POST" }),
+    cancel: (id: string) =>
+      apiFetch<{ project_id: string; cancelled: number }>(`/projects/${id}/cancel`, {
+        method: "POST",
+      }),
     status: (id: string) => apiFetch<GenerationStatusResponse>(`/projects/${id}/status`),
     chunks: (id: string) => apiFetch<Chunk[]>(`/projects/${id}/chunks`),
     assemble: (id: string) => apiFetch<Project>(`/projects/${id}/assemble`, { method: "POST" }),

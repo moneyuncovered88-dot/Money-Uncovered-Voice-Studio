@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Download, ListChecks, Loader2, Play, RefreshCw, RotateCcw, Zap } from "lucide-react";
+import { Download, ListChecks, Loader2, Play, RefreshCw, RotateCcw, X, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +59,7 @@ export function GenerationPanel({
   const [status, setStatus] = useState<GenerationStatusResponse | null>(null);
   const [chunks, setChunks] = useState<Chunk[]>([]);
   const [audio, setAudio] = useState<AudioUrls | null>(null);
-  const [busy, setBusy] = useState<null | "preview" | "generate" | "assemble">(null);
+  const [busy, setBusy] = useState<null | "preview" | "generate" | "assemble" | "cancel">(null);
   const loadedOnce = useRef(false);
 
   const load = useCallback(async () => {
@@ -125,6 +125,19 @@ export function GenerationPanel({
     }
   }
 
+  async function onCancel() {
+    setBusy("cancel");
+    try {
+      await api.generation.cancel(projectId);
+      toast.success("Generation cancelled");
+      await load();
+    } catch (e) {
+      toast.error(e instanceof ApiRequestError ? e.message : "Could not cancel");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   async function onRebuild() {
     setBusy("assemble");
     try {
@@ -166,6 +179,21 @@ export function GenerationPanel({
               )}
               Generate
             </Button>
+            {active ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCancel}
+                disabled={busy === "cancel"}
+              >
+                {busy === "cancel" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <X className="h-4 w-4" />
+                )}
+                Cancel
+              </Button>
+            ) : null}
           </div>
         </CardHeader>
         <CardContent className="space-y-3">

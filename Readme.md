@@ -1,13 +1,17 @@
-# MU Voice Studio
+# MUS Voices
 
-**Money Uncovered Voice Studio** — a private, long-form text-to-speech narration
-studio built for the [Money Uncovered](https://www.youtube.com/) YouTube channel.
-It works like a lightweight, private ElevenLabs focused on one job: turning long
-finance-documentary scripts into consistent, natural American narration.
+**MUS Voices** (Money Uncovered Studio Voices) — a creator-first AI voice studio
+for long-form narration: documentaries, explainers, shorts, and YouTube automation.
+It turns long scripts into consistent, natural narration with smart chunking,
+per-chunk regeneration, voice profiles, and a project-based workflow.
 
-> Status: **Phase 1 (Foundation)** complete — monorepo, auth, database, project /
-> voice / pronunciation management, and the script-preprocessing engine. GPU
-> generation (Chatterbox on RunPod) is architected but implemented in later phases.
+Planned domain: **musvoices.com**. See [docs/MUS_VOICES_SAAS_PLAN.md](docs/MUS_VOICES_SAAS_PLAN.md)
+for the SaaS roadmap and gap analysis.
+
+> Status: core narration pipeline works end-to-end (auth, projects, voices,
+> preprocessing, Chatterbox generation on GPU, assembly, downloads). Now evolving
+> into a multi-plan SaaS — themes, collapsible sidebar, usage/plans/admin, and
+> abuse protection are in progress.
 
 ---
 

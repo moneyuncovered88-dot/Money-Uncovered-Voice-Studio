@@ -16,7 +16,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-export function UserMenu({ email }: { email: string | null }) {
+export function UserMenu({
+  email,
+  collapsed = false,
+}: {
+  email: string | null;
+  collapsed?: boolean;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const initial = (email ?? "?").charAt(0).toUpperCase();
@@ -38,11 +44,17 @@ export function UserMenu({ email }: { email: string | null }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start gap-3 px-3">
+        <Button
+          variant="ghost"
+          className={collapsed ? "w-full justify-center px-0" : "w-full justify-start gap-3 px-3"}
+          title={collapsed ? (email ?? "Account") : undefined}
+        >
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
             {initial}
           </span>
-          <span className="truncate text-sm text-muted-foreground">{email ?? "Account"}</span>
+          {!collapsed ? (
+            <span className="truncate text-sm text-muted-foreground">{email ?? "Account"}</span>
+          ) : null}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
