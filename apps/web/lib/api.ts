@@ -21,7 +21,9 @@ import type {
   VoiceControlsResponse,
 } from "@/types/api";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Trim any trailing slash so we never build a double-slash path
+// (e.g. "https://api.example.com/" + "/api/projects" -> "...//api/projects" -> 404).
+const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/+$/, "");
 
 export class ApiRequestError extends Error {
   status: number;
