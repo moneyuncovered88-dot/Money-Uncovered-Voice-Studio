@@ -15,7 +15,7 @@ from app.config import get_settings
 from app.errors import UpstreamError
 
 
-def run_sync(job_input: dict[str, Any], *, timeout: float = 300.0) -> dict[str, Any]:
+def run_sync(job_input: dict[str, Any], *, timeout: float = 600.0) -> dict[str, Any]:
     settings = get_settings()
     if not settings.modal_endpoint_url:
         raise UpstreamError(

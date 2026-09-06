@@ -119,6 +119,9 @@ def start_generation(client: Client, user_id: str, project_id: str) -> dict[str,
     """Create (or resume) a full generation job. Returns the job row."""
     project = projects_service.get_project(client, user_id, project_id)
 
+    # Reclaim orphaned jobs first (e.g. a backend restart killed the background
+    # task), otherwise a dead job would block this retry forever.
+    jobs_service.reclaim_stale_jobs(client, project_id)
     if jobs_service.get_active_job(client, project_id):
         raise ConflictError("A generation is already running for this project.")
 
@@ -150,6 +153,14 @@ def start_generation(client: Client, user_id: str, project_id: str) -> dict[str,
     )
     projects_service.update_project(client, user_id, project_id, {"status": "queued"})
     return job
+
+
+def cancel_generation(client: Client, user_id: str, project_id: str) -> dict[str, Any]:
+    """Cancel any running generation for a project and mark it idle."""
+    projects_service.get_project(client, user_id, project_id)  # ownership / 404
+    cancelled = jobs_service.cancel_active_jobs(client, project_id)
+    projects_service.update_project(client, user_id, project_id, {"status": "draft"})
+    return {"project_id": project_id, "cancelled": cancelled}
 
 
 async def process_job(job_id: str, user_id: str) -> None:

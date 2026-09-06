@@ -52,6 +52,61 @@ def get_active_job(client: Client, project_id: str) -> dict[str, Any] | None:
     return rows[0] if rows else None
 
 
+def _age_seconds(row: dict[str, Any]) -> float | None:
+    """Seconds since the job last moved. Uses updated_at, falling back to created_at."""
+    raw = row.get("updated_at") or row.get("created_at")
+    if not raw:
+        return None
+    try:
+        ts = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=UTC)
+        return (datetime.now(UTC) - ts).total_seconds()
+    except ValueError:
+        return None
+
+
+def reclaim_stale_jobs(client: Client, project_id: str, max_age_seconds: int = 300) -> int:
+    """Fail active jobs that have made no progress for a while.
+
+    FastAPI background tasks don't survive a backend restart/redeploy, which
+    leaves jobs stuck in an active status with nothing processing them. Those
+    orphans otherwise block every retry, so we reclaim them here.
+    """
+    rows = (
+        _exec(
+            client.table(_TABLE)
+            .select("*")
+            .eq("project_id", project_id)
+            .in_("status", list(ACTIVE_STATUSES))
+        ).data
+        or []
+    )
+    reclaimed = 0
+    for row in rows:
+        age = _age_seconds(row)
+        if age is None or age > max_age_seconds:
+            update_job(client, row["id"], {"status": "failed"})
+            reclaimed += 1
+    return reclaimed
+
+
+def cancel_active_jobs(client: Client, project_id: str) -> int:
+    """Mark all currently-active jobs for a project as cancelled."""
+    rows = (
+        _exec(
+            client.table(_TABLE)
+            .select("id")
+            .eq("project_id", project_id)
+            .in_("status", list(ACTIVE_STATUSES))
+        ).data
+        or []
+    )
+    for row in rows:
+        update_job(client, row["id"], {"status": "cancelled"})
+    return len(rows)
+
+
 def get_latest_job(client: Client, project_id: str) -> dict[str, Any] | None:
     rows = _exec(
         client.table(_TABLE)

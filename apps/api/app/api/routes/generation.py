@@ -43,6 +43,12 @@ def generate_full(
     return job
 
 
+@router.post("/projects/{project_id}/cancel")
+def cancel_generation(project_id: str, user: CurrentUserDep, client: SupabaseDep) -> dict:
+    """Cancel a running (or orphaned) generation so the project can be retried."""
+    return generation_service.cancel_generation(client, user.id, project_id)
+
+
 @router.get("/projects/{project_id}/status", response_model=StatusResponse)
 def generation_status(project_id: str, user: CurrentUserDep, client: SupabaseDep) -> dict:
     return generation_service.chunk_status_summary(client, user.id, project_id)
