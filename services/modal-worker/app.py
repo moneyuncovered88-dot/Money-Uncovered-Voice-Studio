@@ -31,7 +31,7 @@ app = modal.App("mu-voice-tts")
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("ffmpeg", "git")
-    .pip_install("chatterbox-tts")
+    .pip_install("chatterbox-tts", "fastapi[standard]")
 )
 
 # Shared secret the backend must send in the request body ("token").
