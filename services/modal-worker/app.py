@@ -1,4 +1,4 @@
-"""Modal worker for MU Voice Studio — Chatterbox-Turbo on a free-tier GPU.
+"""Modal worker for MU Voice Studio — Chatterbox TTS on a free-tier GPU.
 
 Deploy:
     pip install modal
@@ -52,10 +52,10 @@ class TTS:
     @modal.enter()
     def load(self) -> None:
         import torch
-        from chatterbox.tts import ChatterboxTurboTTS
+        from chatterbox.tts import ChatterboxTTS
 
         self.torch = torch
-        self.model = ChatterboxTurboTTS.from_pretrained(device="cuda", nano=False)
+        self.model = ChatterboxTTS.from_pretrained(device="cuda")
         self._sig = set(inspect.signature(self.model.generate).parameters.keys())
 
     def _synthesize(self, text: str, ref_path: str | None, settings: dict):
@@ -114,7 +114,7 @@ class TTS:
                 "sample_rate": sr,
                 "duration_seconds": duration,
                 "generation_ms": int((time.perf_counter() - start) * 1000),
-                "model_name": os.environ.get("MODEL_NAME", "chatterbox-turbo"),
+                "model_name": os.environ.get("MODEL_NAME", "chatterbox"),
                 "error": None,
             }
         except Exception as exc:  # noqa: BLE001 - report failure to the caller
