@@ -56,7 +56,7 @@ It maps each area to what the codebase **already has**, what is **partial**, and
 
 **Phase 3 — Pages:** ✅ Home (plan/quota + SVG activity chart + ad slot), Library (tabs + search), Usage (real data), Plans, Help (support form). Settings expansion still pending.
 
-**Phase 4 — Monetization & safety:** freemium quota enforcement in backend; abuse protection (rate limits, concurrent-job caps, per-day char caps, email-verify gate, CAPTCHA); AdSense placeholders (free users only).
+**Phase 4 — Monetization & safety:** ✅ quota enforcement; abuse protection (per-plan rate limits, concurrency cap, daily generation cap, email-verify gate); optional Turnstile CAPTCHA on signup; free-user ad slots. Real AdSense units still to drop in.
 
 **Phase 5 — Billing:** Stripe integration architecture (checkout, webhooks, plan sync) — usable even if staged.
 
