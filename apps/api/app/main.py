@@ -13,7 +13,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import __version__
-from app.api.routes import config, generation, health, projects, pronunciations, voices
+from app.api.routes import (
+    account,
+    config,
+    generation,
+    health,
+    projects,
+    pronunciations,
+    voices,
+)
 from app.config import get_settings
 from app.errors import register_exception_handlers
 from app.logging_config import configure_logging, get_logger
@@ -63,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(voices.router, prefix=API_PREFIX)
     app.include_router(pronunciations.router, prefix=API_PREFIX)
     app.include_router(config.router, prefix=API_PREFIX)
+    app.include_router(account.router, prefix=API_PREFIX)
 
     @app.get("/")
     def root() -> dict[str, str]:

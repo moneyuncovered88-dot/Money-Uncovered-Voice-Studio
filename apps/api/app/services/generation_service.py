@@ -18,7 +18,7 @@ from supabase import Client
 from app.audio import assembly
 from app.audio.timeline import build_timeline
 from app.config import get_settings
-from app.errors import AppError, ConflictError, NotFoundError, ValidationError
+from app.errors import AppError, ConflictError, NotFoundError, QuotaError, ValidationError
 from app.logging_config import get_logger
 from app.preprocessing.pipeline import preprocess
 from app.services import (
@@ -26,6 +26,7 @@ from app.services import (
     jobs_service,
     projects_service,
     storage_service,
+    usage_service,
     voices_service,
 )
 from app.services.presets import get_preset
@@ -97,10 +98,15 @@ def generate_preview(client: Client, user_id: str, project_id: str) -> dict[str,
     if not texts:
         raise ValidationError("There's no script to preview yet.")
 
-    preview_text = " ".join(texts)[:_PREVIEW_MAX_CHARS]
+    plan = usage_service.get_plan(client, user_id)
+    preview_text = " ".join(texts)[: plan.preview_max_chars]
+    usage_service.ensure_can_preview(client, user_id, len(preview_text))
     provider = get_tts_provider()
     voice = _build_voice(client, user_id, project)
     result = provider.generate(preview_text, voice, controls)
+    usage_service.record_usage(
+        client, user_id, usage_service.CHARACTERS, len(preview_text), project_id=project_id
+    )
 
     path = f"{user_id}/{project_id}/preview.wav"
     storage_service.upload_bytes(
@@ -129,6 +135,16 @@ def start_generation(client: Client, user_id: str, project_id: str) -> dict[str,
     if not texts:
         raise ValidationError("There's no script to generate yet.")
 
+    # Plan enforcement: chunk count + monthly character quota.
+    plan = usage_service.get_plan(client, user_id)
+    if len(texts) > plan.max_chunks_per_job:
+        raise QuotaError(
+            f"This script splits into {len(texts)} chunks, above the {plan.max_chunks_per_job}-chunk "
+            f"limit on the {plan.name} plan. Shorten the script or upgrade.",
+        )
+    char_count = sum(len(t) for t in texts)
+    usage_service.ensure_can_generate(client, user_id, char_count)
+
     # Reuse existing chunks (and their audio) when the script is unchanged.
     existing = chunks_service.list_chunks(client, project_id)
     if not chunks_service.plan_reuse([c["processed_text"] for c in existing], texts):
@@ -152,6 +168,13 @@ def start_generation(client: Client, user_id: str, project_id: str) -> dict[str,
         },
     )
     projects_service.update_project(client, user_id, project_id, {"status": "queued"})
+    # Character quota is consumed at submit time; per-job count for analytics.
+    usage_service.record_usage(
+        client, user_id, usage_service.CHARACTERS, char_count, project_id=project_id, job_id=job["id"]
+    )
+    usage_service.record_usage(
+        client, user_id, usage_service.JOBS, 1, project_id=project_id, job_id=job["id"]
+    )
     return job
 
 
@@ -221,6 +244,14 @@ async def process_job(job_id: str, user_id: str) -> None:
         projects_service.update_project(client, user_id, project_id, {"status": "assembling"})
         await run_in_threadpool(_assemble, client, user_id, project_id, gap_seconds, normalize)
         _finalize_job(client, job_id, "completed", total_ms)
+        # Record generated minutes for usage/analytics (best-effort).
+        finished = projects_service.get_project(client, user_id, project_id)
+        secs = float(finished.get("final_duration_seconds") or 0)
+        if secs > 0:
+            usage_service.record_usage(
+                client, user_id, usage_service.MINUTES, round(secs / 60.0, 3),
+                project_id=project_id, job_id=job_id,
+            )
     except Exception as exc:  # noqa: BLE001 - a job must never die silently
         logger.exception("job_failed", extra={"job_id": job_id, "project_id": project_id})
         _finalize_job(client, job_id, "failed", 0, str(exc))
@@ -427,6 +458,9 @@ def chunk_audio_url(client: Client, user_id: str, chunk_id: str) -> dict[str, An
 
 def chunk_status_summary(client: Client, user_id: str, project_id: str) -> dict[str, Any]:
     projects_service.get_project(client, user_id, project_id)  # ownership / 404
+    # Self-heal: the UI polls this, so reclaim jobs orphaned by a restart here
+    # too — the progress bar recovers on its own without the user retrying.
+    jobs_service.reclaim_stale_jobs(client, project_id)
     job = jobs_service.get_latest_job(client, project_id)
     chunks = chunks_service.list_chunks(client, project_id)
     generated = sum(1 for c in chunks if c.get("status") == "generated")

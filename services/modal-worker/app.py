@@ -34,6 +34,18 @@ image = (
     .pip_install("chatterbox-tts", "fastapi[standard]")
 )
 
+
+def _prefetch_model() -> None:
+    """Download the Chatterbox weights at image-build time so cold containers
+    don't re-fetch ~2GB from Hugging Face on first request."""
+    from chatterbox.tts import ChatterboxTTS
+
+    ChatterboxTTS.from_pretrained(device="cpu")
+
+
+# Bake the model into the image layer -> much faster cold starts.
+image = image.run_function(_prefetch_model)
+
 # Shared secret the backend must send in the request body ("token").
 #   modal secret create mu-voice-tts MU_TTS_TOKEN=<random>
 secret = modal.Secret.from_name("mu-voice-tts")

@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { api, ApiRequestError } from "@/lib/api";
 
 const FAQ = [
   {
@@ -33,17 +34,25 @@ const FAQ = [
 export default function HelpPage() {
   const [topic, setTopic] = useState("");
   const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!message.trim()) {
       toast.error("Please describe your issue.");
       return;
     }
-    // Support ticket submission is wired up in a later phase.
-    toast.success("Thanks — support requests will be enabled soon.");
-    setTopic("");
-    setMessage("");
+    setSaving(true);
+    try {
+      await api.account.createTicket({ topic: topic || null, message: message.trim() });
+      toast.success("Thanks — your request has been submitted.");
+      setTopic("");
+      setMessage("");
+    } catch (err) {
+      toast.error(err instanceof ApiRequestError ? err.message : "Could not submit your request.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -81,7 +90,9 @@ export default function HelpPage() {
                   onChange={(e) => setMessage(e.target.value)}
                 />
               </div>
-              <Button type="submit">Submit request</Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? "Submitting…" : "Submit request"}
+              </Button>
             </form>
           </CardContent>
         </Card>

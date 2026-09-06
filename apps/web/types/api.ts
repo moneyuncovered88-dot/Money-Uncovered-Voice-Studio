@@ -157,3 +157,39 @@ export interface AudioUrls {
 export interface ApiError {
   error: { code: string; message: string };
 }
+
+export interface PlanPublic {
+  key: string;
+  name: string;
+  price_monthly: number;
+  price_yearly: number;
+  monthly_char_quota: number;
+  max_voices: number;
+  max_chunks_per_job: number;
+  max_concurrent_jobs: number;
+  preview_max_chars: number;
+  ads: boolean;
+  voice_reference: boolean;
+  commercial_use: boolean;
+  features: string[];
+}
+
+export interface UsageSummary {
+  plan: PlanPublic;
+  usage: {
+    characters: number;
+    minutes: number;
+    jobs: number;
+    projects: number;
+    voices: number;
+  };
+  quota: {
+    characters: number;
+    characters_used: number;
+    characters_remaining: number;
+    percent_used: number;
+  };
+  ads_enabled: boolean;
+  period_start: string;
+  next_reset: string;
+}

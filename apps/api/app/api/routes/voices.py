@@ -17,7 +17,7 @@ from app.dependencies import CurrentUserDep, SettingsDep, SupabaseDep
 from app.errors import ValidationError
 from app.schemas.common import DeletedResponse
 from app.schemas.voice import VoiceCreate, VoiceOut, VoiceUpdate
-from app.services import storage_service
+from app.services import storage_service, usage_service
 from app.services import voices_service as svc
 
 router = APIRouter(prefix="/voices", tags=["voices"])
@@ -35,6 +35,7 @@ def list_voices(user: CurrentUserDep, client: SupabaseDep) -> list[dict]:
 
 @router.post("", response_model=VoiceOut, status_code=201)
 def create_voice(body: VoiceCreate, user: CurrentUserDep, client: SupabaseDep) -> dict:
+    usage_service.ensure_can_add_voice(client, user.id)
     return svc.create_voice(client, user.id, body.model_dump())
 
 

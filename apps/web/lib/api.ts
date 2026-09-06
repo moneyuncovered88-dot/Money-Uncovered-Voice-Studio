@@ -17,6 +17,8 @@ import type {
   ProjectListItem,
   Pronunciation,
   ScriptAnalysis,
+  UsageSummary,
+  PlanPublic,
   Voice,
   VoiceControlsResponse,
 } from "@/types/api";
@@ -155,6 +157,13 @@ export const api = {
     chunkAudioUrl: (chunkId: string) =>
       apiFetch<{ url: string }>(`/chunks/${chunkId}/audio-url`),
     history: () => apiFetch<Job[]>("/jobs"),
+  },
+  account: {
+    usage: () => apiFetch<UsageSummary>("/usage/summary"),
+    plans: () =>
+      apiFetch<{ current_plan: string; plans: PlanPublic[] }>("/plans"),
+    createTicket: (body: { topic?: string | null; message: string }) =>
+      apiFetch<{ id: string }>("/support/tickets", { method: "POST", body: json(body) }),
   },
   config: {
     presets: () => apiFetch<Preset[]>("/config/presets"),

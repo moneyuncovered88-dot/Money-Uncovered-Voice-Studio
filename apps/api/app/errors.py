@@ -64,6 +64,20 @@ class UpstreamError(AppError):
     code = "upstream_error"
 
 
+class QuotaError(AppError):
+    """The user has hit a plan limit (quota, voice count, concurrency, etc.)."""
+
+    status_code = status.HTTP_402_PAYMENT_REQUIRED
+    code = "quota_exceeded"
+
+
+class RateLimitError(AppError):
+    """Too many requests / too much activity in a short window."""
+
+    status_code = status.HTTP_429_TOO_MANY_REQUESTS
+    code = "rate_limited"
+
+
 def _error_body(code: str, message: str) -> dict[str, object]:
     return {"error": {"code": code, "message": message}}
 
