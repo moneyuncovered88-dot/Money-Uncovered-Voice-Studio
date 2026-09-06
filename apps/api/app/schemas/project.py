@@ -14,7 +14,7 @@ class ProjectBase(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     video_title: str | None = Field(default=None, max_length=300)
     voice_profile_id: str | None = None
-    narration_preset: str = "money_uncovered_documentary"
+    narration_preset: str = "mu_storyteller"
     speak_headings: bool = False
     notes: str | None = Field(default=None, max_length=2000)
 

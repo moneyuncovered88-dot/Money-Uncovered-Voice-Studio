@@ -40,7 +40,7 @@ export default function NewNarrationPage() {
   const [title, setTitle] = useState("");
   const [videoTitle, setVideoTitle] = useState("");
   const [voiceId, setVoiceId] = useState<string>(NO_VOICE);
-  const [preset, setPreset] = useState("money_uncovered_documentary");
+  const [preset, setPreset] = useState("mu_storyteller");
   const [script, setScript] = useState("");
   const [notes, setNotes] = useState("");
   const [speakHeadings, setSpeakHeadings] = useState(false);
