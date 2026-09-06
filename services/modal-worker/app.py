@@ -80,6 +80,19 @@ class TTS:
         tensor = wav.detach().to("cpu")
         if tensor.dim() == 1:
             tensor = tensor.unsqueeze(0)
+
+        # Speed / pacing control. Chatterbox has no speed knob, so we
+        # time-stretch the waveform (pitch-preserving phase vocoder).
+        # speed < 1.0 => slower & longer; > 1.0 => faster. 1.0 = untouched.
+        speed = float(settings.get("speed") or 1.0)
+        if abs(speed - 1.0) > 1e-3:
+            speed = max(0.5, min(1.5, speed))
+            import librosa
+
+            mono = tensor.numpy()[0]
+            stretched = librosa.effects.time_stretch(mono, rate=speed)
+            tensor = self.torch.from_numpy(stretched).unsqueeze(0)
+
         buffer = io.BytesIO()
         torchaudio.save(buffer, tensor, sr, format="wav")
         duration = round(tensor.shape[-1] / float(sr), 3)
