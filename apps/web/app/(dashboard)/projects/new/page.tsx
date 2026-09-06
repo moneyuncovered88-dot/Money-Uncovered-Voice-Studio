@@ -99,10 +99,10 @@ export default function NewNarrationPage() {
     <form onSubmit={onSubmit} className="space-y-6">
       <PageHeader
         title="New Narration"
-        description="Create a project, paste your script, and pick a voice."
+        description="Create a project, paste your script, and pick a voice. You'll Preview and Generate on the next screen."
         actions={
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Creating…" : "Save Draft"}
+            {submitting ? "Creating…" : "Create & Continue"}
           </Button>
         }
       />
