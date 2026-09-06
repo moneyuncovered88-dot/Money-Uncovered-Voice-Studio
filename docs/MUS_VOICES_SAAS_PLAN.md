@@ -48,13 +48,13 @@ It maps each area to what the codebase **already has**, what is **partial**, and
 
 ## Phased build order (owner's Phases 1–8, adapted to current state)
 
-**Phase 0 (NOW — stability):** fix orphaned-job freeze (stale reclaim + Cancel + model preload + longer timeout). *In progress.*
+**Phase 0 — stability:** ✅ orphaned-job reclaim + Cancel + longer timeout; GPU model baked into image (fast cold starts).
 
-**Phase 1 — Shell & brand:** full MUS Voices rename sweep; light/dark theme system + toggle (persisted); collapsible sidebar (persisted); rename/extend nav to Home/Studio/Voices/Library/Usage/Plans/Help/Settings; full-width layout polish.
+**Phase 1 — Shell & brand:** ✅ MUS Voices rename; light/dark theme toggle (persisted, no-flash); collapsible sidebar (persisted); 8-item nav (Home/Studio/Voices/Library/Usage/Plans/Help/Settings); full-width layout.
 
-**Phase 2 — Data for SaaS:** migrations for plans, subscriptions, usage_ledger, (profiles already exist); RLS; usage tracking hooks in generation (characters, minutes, jobs, storage). *SQL delivered in chat per owner rule, never committed.*
+**Phase 2 — Data + usage:** ✅ plan catalog + per-plan limits; usage_service (ledger, period summary, enforcement) wired into preview/generate/voice-create; account endpoints (/usage/summary, /plans, /support/tickets); durable job self-heal on status poll. New tables (user_subscriptions, usage_ledger, support_tickets, feature_flags) delivered as chat SQL, never committed. Code fails open until the SQL is run.
 
-**Phase 3 — Pages:** Home (charts via Recharts), Library upgrade, Usage, Plans, Help; Settings expansion.
+**Phase 3 — Pages:** ✅ Home (plan/quota + SVG activity chart + ad slot), Library (tabs + search), Usage (real data), Plans, Help (support form). Settings expansion still pending.
 
 **Phase 4 — Monetization & safety:** freemium quota enforcement in backend; abuse protection (rate limits, concurrent-job caps, per-day char caps, email-verify gate, CAPTCHA); AdSense placeholders (free users only).
 
