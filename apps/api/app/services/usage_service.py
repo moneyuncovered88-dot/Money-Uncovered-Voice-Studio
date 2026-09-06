@@ -16,7 +16,7 @@ from supabase import Client
 
 from app.errors import QuotaError
 from app.logging_config import get_logger
-from app.services import plans
+from app.services import jobs_service, plans, rate_limit
 
 logger = get_logger("app.usage")
 
@@ -180,6 +180,37 @@ def ensure_can_preview(client: Client, user_id: str, char_count: int) -> None:
             f"Previews on the {plan.name} plan are limited to {plan.preview_max_chars:,} "
             f"characters. Trim the preview text or upgrade.",
         )
+
+
+def check_rate_limit(client: Client, user_id: str, action: str) -> None:
+    """Throttle expensive actions (preview/generate) per plan."""
+    plan = get_plan(client, user_id)
+    rate_limit.check(f"{user_id}:{action}", plan.rate_per_minute, window_seconds=60.0)
+
+
+def ensure_within_concurrency(client: Client, user_id: str) -> None:
+    plan = get_plan(client, user_id)
+    active = jobs_service.count_active_for_user(client, user_id)
+    if active >= plan.max_concurrent_jobs:
+        raise QuotaError(
+            f"You already have {active} generation(s) running. The {plan.name} plan allows "
+            f"{plan.max_concurrent_jobs} at a time — wait for one to finish or upgrade.",
+        )
+
+
+def ensure_within_daily_limit(client: Client, user_id: str) -> None:
+    plan = get_plan(client, user_id)
+    used = jobs_service.count_created_since(client, user_id, _period_start_day().isoformat())
+    if used >= plan.max_jobs_per_day:
+        raise QuotaError(
+            f"You've reached the {plan.max_jobs_per_day} generations/day limit on the "
+            f"{plan.name} plan. Try again tomorrow or upgrade for more.",
+        )
+
+
+def _period_start_day(now: datetime | None = None) -> datetime:
+    now = now or datetime.now(UTC)
+    return now.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def ensure_can_add_voice(client: Client, user_id: str) -> None:

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, BackgroundTasks
 
-from app.dependencies import CurrentUserDep, SupabaseDep
+from app.dependencies import CurrentUserDep, SupabaseDep, VerifiedUserDep
 from app.schemas.generation import (
     AudioUrls,
     ChunkOut,
@@ -26,7 +26,7 @@ def list_generation_history(user: CurrentUserDep, client: SupabaseDep) -> list[d
 
 
 @router.post("/projects/{project_id}/preview", response_model=PreviewResponse)
-def generate_preview(project_id: str, user: CurrentUserDep, client: SupabaseDep) -> dict:
+def generate_preview(project_id: str, user: VerifiedUserDep, client: SupabaseDep) -> dict:
     return generation_service.generate_preview(client, user.id, project_id)
 
 
@@ -34,7 +34,7 @@ def generate_preview(project_id: str, user: CurrentUserDep, client: SupabaseDep)
 def generate_full(
     project_id: str,
     background: BackgroundTasks,
-    user: CurrentUserDep,
+    user: VerifiedUserDep,
     client: SupabaseDep,
 ) -> dict:
     job = generation_service.start_generation(client, user.id, project_id)

@@ -23,6 +23,8 @@ class Plan:
     max_voices: int  # -1 = unlimited
     max_chunks_per_job: int
     max_concurrent_jobs: int
+    max_jobs_per_day: int
+    rate_per_minute: int  # max preview+generate submissions per minute
     preview_max_chars: int
     priority: int  # higher = sooner in a queue (future use)
     # Feature gates
@@ -59,6 +61,8 @@ PLANS: dict[str, Plan] = {
         max_voices=1,
         max_chunks_per_job=40,
         max_concurrent_jobs=1,
+        max_jobs_per_day=10,
+        rate_per_minute=6,
         preview_max_chars=600,
         priority=0,
         ads=True,
@@ -75,6 +79,8 @@ PLANS: dict[str, Plan] = {
         max_voices=3,
         max_chunks_per_job=200,
         max_concurrent_jobs=1,
+        max_jobs_per_day=50,
+        rate_per_minute=12,
         preview_max_chars=1000,
         priority=1,
         ads=False,
@@ -91,6 +97,8 @@ PLANS: dict[str, Plan] = {
         max_voices=10,
         max_chunks_per_job=500,
         max_concurrent_jobs=2,
+        max_jobs_per_day=200,
+        rate_per_minute=20,
         preview_max_chars=1500,
         priority=2,
         ads=False,
@@ -107,6 +115,8 @@ PLANS: dict[str, Plan] = {
         max_voices=-1,
         max_chunks_per_job=2000,
         max_concurrent_jobs=3,
+        max_jobs_per_day=1000,
+        rate_per_minute=30,
         preview_max_chars=2000,
         priority=3,
         ads=False,

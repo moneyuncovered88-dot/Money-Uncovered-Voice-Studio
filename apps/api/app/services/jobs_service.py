@@ -52,6 +52,36 @@ def get_active_job(client: Client, project_id: str) -> dict[str, Any] | None:
     return rows[0] if rows else None
 
 
+def count_active_for_user(client: Client, user_id: str) -> int:
+    """How many jobs are currently active across all of a user's projects."""
+    try:
+        res = (
+            client.table(_TABLE)
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .in_("status", list(ACTIVE_STATUSES))
+            .execute()
+        )
+        return int(getattr(res, "count", None) or len(res.data or []))
+    except Exception:  # noqa: BLE001
+        return 0
+
+
+def count_created_since(client: Client, user_id: str, since_iso: str) -> int:
+    """How many jobs the user created since a timestamp (for daily caps)."""
+    try:
+        res = (
+            client.table(_TABLE)
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .gte("created_at", since_iso)
+            .execute()
+        )
+        return int(getattr(res, "count", None) or len(res.data or []))
+    except Exception:  # noqa: BLE001
+        return 0
+
+
 def _age_seconds(row: dict[str, Any]) -> float | None:
     """Seconds since the job last moved. Uses updated_at, falling back to created_at."""
     raw = row.get("updated_at") or row.get("created_at")

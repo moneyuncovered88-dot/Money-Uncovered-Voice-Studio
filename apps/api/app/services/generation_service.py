@@ -93,6 +93,7 @@ def _build_voice(client: Client, user_id: str, project: dict[str, Any]):
 # Preview (synchronous, short)
 # --------------------------------------------------------------------------- #
 def generate_preview(client: Client, user_id: str, project_id: str) -> dict[str, Any]:
+    usage_service.check_rate_limit(client, user_id, "preview")
     project = projects_service.get_project(client, user_id, project_id)
     texts, controls, _gap, _norm = _plan(client, user_id, project)
     if not texts:
@@ -123,6 +124,7 @@ def generate_preview(client: Client, user_id: str, project_id: str) -> dict[str,
 # --------------------------------------------------------------------------- #
 def start_generation(client: Client, user_id: str, project_id: str) -> dict[str, Any]:
     """Create (or resume) a full generation job. Returns the job row."""
+    usage_service.check_rate_limit(client, user_id, "generate")
     project = projects_service.get_project(client, user_id, project_id)
 
     # Reclaim orphaned jobs first (e.g. a backend restart killed the background
@@ -130,6 +132,10 @@ def start_generation(client: Client, user_id: str, project_id: str) -> dict[str,
     jobs_service.reclaim_stale_jobs(client, project_id)
     if jobs_service.get_active_job(client, project_id):
         raise ConflictError("A generation is already running for this project.")
+
+    # Abuse protection: cap concurrent + daily generations per plan.
+    usage_service.ensure_within_concurrency(client, user_id)
+    usage_service.ensure_within_daily_limit(client, user_id)
 
     texts, controls, gap_seconds, normalize = _plan(client, user_id, project)
     if not texts:

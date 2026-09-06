@@ -20,7 +20,7 @@ from pydantic import BaseModel
 from supabase import Client
 
 from app.config import Settings, get_settings
-from app.errors import AuthError
+from app.errors import AuthError, ForbiddenError
 from app.services.supabase_client import get_service_client
 
 _ASYMMETRIC_ALGS = ("ES256", "RS256")
@@ -31,6 +31,19 @@ class CurrentUser(BaseModel):
 
     id: str
     email: str | None = None
+    email_verified: bool = True
+
+
+def _claims_email_verified(claims: dict) -> bool:
+    """Best-effort email-verified flag. Defaults to True so we never wrongly
+    block when the claim is absent (Supabase can also enforce confirmation at
+    login via project settings)."""
+    if "email_verified" in claims:
+        return bool(claims.get("email_verified"))
+    meta = claims.get("user_metadata") or {}
+    if isinstance(meta, dict) and "email_verified" in meta:
+        return bool(meta.get("email_verified"))
+    return True
 
 
 def _extract_bearer(authorization: str | None) -> str:
@@ -111,7 +124,23 @@ def get_current_user(
     if not user_id:
         raise AuthError("Token missing subject claim")
 
-    return CurrentUser(id=user_id, email=claims.get("email"))
+    return CurrentUser(
+        id=user_id,
+        email=claims.get("email"),
+        email_verified=_claims_email_verified(claims),
+    )
+
+
+def get_verified_user(
+    user: Annotated[CurrentUser, Depends(get_current_user)],
+) -> CurrentUser:
+    """Require a confirmed email for cost-incurring actions (generation, voices)."""
+    if not user.email_verified:
+        raise ForbiddenError(
+            "Please verify your email address before generating audio.",
+            code="email_unverified",
+        )
+    return user
 
 
 def get_supabase() -> Client:
@@ -120,5 +149,6 @@ def get_supabase() -> Client:
 
 
 CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]
+VerifiedUserDep = Annotated[CurrentUser, Depends(get_verified_user)]
 SupabaseDep = Annotated[Client, Depends(get_supabase)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]

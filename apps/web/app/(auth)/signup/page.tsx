@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Turnstile, captchaEnabled } from "@/components/auth/turnstile";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,9 +20,14 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsConfirm, setNeedsConfirm] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (captchaEnabled && !captchaToken) {
+      setError("Please complete the CAPTCHA.");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -31,6 +37,7 @@ export default function SignupPage() {
         password,
         options: {
           data: { display_name: displayName },
+          captchaToken: captchaToken || undefined,
           emailRedirectTo:
             typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined,
         },
@@ -111,6 +118,7 @@ export default function SignupPage() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+          <Turnstile onToken={setCaptchaToken} />
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "Creating…" : "Create account"}
