@@ -66,6 +66,16 @@ class ChatterboxProvider(TTSProvider):
                 description="Sampling randomness (applied only if the model supports it).",
             ),
             ControlSpec(
+                name="speed",
+                label="Speed",
+                type="float",
+                default=1.0,
+                minimum=0.5,
+                maximum=1.5,
+                step=0.05,
+                description="Playback pace (pitch-preserving). 1.0 = normal, lower = slower.",
+            ),
+            ControlSpec(
                 name="seed",
                 label="Seed",
                 type="seed",
