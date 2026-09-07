@@ -74,9 +74,17 @@
   --destructive: 0 70% 45%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 222 12% 86%;
-  --input: 222 12% 86%;
+  --border: 222 13% 83%;
+  --input: 222 13% 83%;
   --ring: 158 58% 36%;
+}
+
+/* Light mode leans on soft elevation, not just borders, so cards read as
+   surfaces sitting above the page — the way a designer would build it. */
+:root.light [class~="bg-card"] {
+  box-shadow:
+    0 1px 2px hsl(222 24% 12% / 0.04),
+    0 2px 6px hsl(222 24% 12% / 0.05);
 }
 
 * {
@@ -85,6 +93,10 @@
 
 html {
   color-scheme: dark;
+}
+/* Match native controls (scrollbars, date pickers, form widgets) to the theme. */
+html.light {
+  color-scheme: light;
 }
 
 body {
