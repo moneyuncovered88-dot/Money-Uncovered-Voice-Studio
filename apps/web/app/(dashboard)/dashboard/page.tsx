@@ -6,10 +6,8 @@ import { Clock, ListMusic, Mic2, Sparkles, TrendingUp } from "lucide-react";
 import { AdSlot } from "@/components/ads/ad-slot";
 import { BarChart, type BarDatum } from "@/components/charts/bar-chart";
 import { EmptyState } from "@/components/common/empty-state";
-import { PageHeader } from "@/components/common/page-header";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ProjectsTable } from "@/components/projects/projects-table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +15,13 @@ import { useApiData } from "@/hooks/use-api-data";
 import { api } from "@/lib/api";
 import { formatMinutes } from "@/lib/format";
 import type { Job, ProjectListItem, UsageSummary, Voice } from "@/types/api";
+
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
 
 function activityChart(jobs: Job[]): BarDatum[] {
   return jobs
@@ -63,20 +68,29 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title="Home"
-        description="Your narration studio at a glance."
-        actions={
-          <div className="flex items-center gap-2">
-            {usage ? <Badge variant="muted">{usage.plan.name} plan</Badge> : null}
-            <Button asChild>
-              <Link href="/projects/new">
-                <Sparkles className="h-4 w-4" /> New Narration
-              </Link>
-            </Button>
-          </div>
-        }
-      />
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="eyebrow">{greeting()}</p>
+          <h1 className="mt-1.5 text-2xl font-semibold tracking-tight">Your studio at a glance</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {usage
+              ? `You're on the ${usage.plan.name} plan · ${usage.quota.characters_remaining.toLocaleString()} characters left this month.`
+              : "Create, generate, and manage your narrations."}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button asChild variant="outline">
+            <Link href="/voices">
+              <Mic2 className="h-4 w-4" /> Add voice
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/projects/new">
+              <Sparkles className="h-4 w-4" /> New Narration
+            </Link>
+          </Button>
+        </div>
+      </div>
 
       {error ? (
         <Card>
