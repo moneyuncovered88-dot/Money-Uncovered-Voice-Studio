@@ -60,7 +60,7 @@ It maps each area to what the codebase **already has**, what is **partial**, and
 
 **Phase 5 — Billing:** Stripe integration architecture (checkout, webhooks, plan sync) — usable even if staged.
 
-**Phase 6 — Admin:** role-based admin (users, usage, active/failed jobs, GPU cost, abuse review, feature flags).
+**Phase 6 — Admin:** ✅ role-based admin (ADMIN_EMAILS). Overview (active/failed jobs, GPU cost, MRR estimate, plan distribution), Jobs, Users (Auth admin API), Tickets, Feature flags (ads/signups/generation kill switch). Sidebar shows Admin only for admins.
 
 **Phase 7 — Polish & docs:** charts in both themes, empty/loading/error states, tests, deployment docs.
 
