@@ -19,6 +19,12 @@ import type {
   ScriptAnalysis,
   UsageSummary,
   PlanPublic,
+  Me,
+  AdminOverview,
+  AdminJob,
+  AdminUser,
+  SupportTicket,
+  FeatureFlag,
   Voice,
   VoiceControlsResponse,
 } from "@/types/api";
@@ -159,11 +165,25 @@ export const api = {
     history: () => apiFetch<Job[]>("/jobs"),
   },
   account: {
+    me: () => apiFetch<Me>("/me"),
     usage: () => apiFetch<UsageSummary>("/usage/summary"),
     plans: () =>
       apiFetch<{ current_plan: string; plans: PlanPublic[] }>("/plans"),
     createTicket: (body: { topic?: string | null; message: string }) =>
       apiFetch<{ id: string }>("/support/tickets", { method: "POST", body: json(body) }),
+  },
+  admin: {
+    overview: () => apiFetch<AdminOverview>("/admin/overview"),
+    jobs: (status?: string) =>
+      apiFetch<AdminJob[]>(`/admin/jobs${status ? `?status=${status}` : ""}`),
+    users: () => apiFetch<AdminUser[]>("/admin/users"),
+    tickets: () => apiFetch<SupportTicket[]>("/admin/tickets"),
+    featureFlags: () => apiFetch<FeatureFlag[]>("/admin/feature-flags"),
+    setFlag: (key: string, enabled: boolean) =>
+      apiFetch<{ key: string; enabled: boolean }>("/admin/feature-flags", {
+        method: "POST",
+        body: json({ key, enabled }),
+      }),
   },
   config: {
     presets: () => apiFetch<Preset[]>("/config/presets"),

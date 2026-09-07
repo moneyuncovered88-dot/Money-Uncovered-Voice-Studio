@@ -9,10 +9,13 @@ import {
   Library,
   Mic2,
   Settings,
+  Shield,
   SlidersHorizontal,
   Sparkles,
 } from "lucide-react";
 
+import { useApiData } from "@/hooks/use-api-data";
+import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -25,6 +28,8 @@ const NAV = [
   { href: "/help", label: "Help", icon: HelpCircle },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
+
+const ADMIN_ITEM = { href: "/admin", label: "Admin", icon: Shield } as const;
 
 function isActive(href: string, pathname: string): boolean {
   if (href === "/projects/new") return pathname === "/projects/new";
@@ -44,10 +49,12 @@ export function SidebarNav({
   collapsed?: boolean;
 }) {
   const pathname = usePathname();
+  const { data: me } = useApiData(() => api.account.me(), []);
+  const items = me?.is_admin ? [...NAV, ADMIN_ITEM] : NAV;
 
   return (
     <nav className="flex flex-col gap-1 px-3">
-      {NAV.map(({ href, label, icon: Icon }) => {
+      {items.map(({ href, label, icon: Icon }) => {
         const active = isActive(href, pathname);
         return (
           <Link

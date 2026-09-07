@@ -174,6 +174,64 @@ export interface PlanPublic {
   features: string[];
 }
 
+export interface Me {
+  id: string;
+  email: string | null;
+  email_verified: boolean;
+  is_admin: boolean;
+  plan: string;
+}
+
+export interface AdminOverview {
+  jobs: {
+    active: number;
+    failed_today: number;
+    completed: number;
+    gpu_seconds: number;
+    estimated_cost: number;
+  };
+  content: { projects: number; voices: number };
+  plan_distribution: Record<string, number>;
+  monthly_revenue_estimate: number;
+  open_tickets: number;
+}
+
+export interface AdminJob {
+  id: string;
+  user_id: string;
+  project_id: string;
+  status: string;
+  total_chunks: number | null;
+  gpu_seconds: number | null;
+  estimated_cost: number | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string | null;
+  created_at: string;
+  last_sign_in_at: string;
+  plan: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  user_id: string;
+  topic: string | null;
+  message: string;
+  status: string;
+  created_at: string;
+}
+
+export interface FeatureFlag {
+  key: string;
+  label: string;
+  enabled: boolean;
+  value: unknown;
+}
+
 export interface UsageSummary {
   plan: PlanPublic;
   usage: {

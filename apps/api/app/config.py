@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     # App
     app_env: str = "development"
     log_level: str = "INFO"
+    # Comma-separated list of admin emails (matched against the verified JWT email).
+    admin_emails: str = ""
 
     # Supabase
     supabase_url: str = ""
@@ -69,6 +71,14 @@ class Settings(BaseSettings):
     def cors_origins(self) -> list[str]:
         """Parsed list of allowed CORS origins."""
         return [o.strip() for o in self.backend_cors_origins.split(",") if o.strip()]
+
+    @property
+    def admin_email_list(self) -> list[str]:
+        """Normalized (lowercased) list of admin emails."""
+        return [e.strip().lower() for e in self.admin_emails.split(",") if e.strip()]
+
+    def is_admin(self, email: str | None) -> bool:
+        return bool(email) and email.strip().lower() in self.admin_email_list
 
     @property
     def is_production(self) -> bool:

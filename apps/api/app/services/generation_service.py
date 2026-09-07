@@ -23,6 +23,7 @@ from app.logging_config import get_logger
 from app.preprocessing.pipeline import preprocess
 from app.services import (
     chunks_service,
+    feature_flags_service,
     jobs_service,
     projects_service,
     storage_service,
@@ -39,6 +40,15 @@ logger = get_logger("app.generation")
 
 _MAX_ATTEMPTS = 3
 _PREVIEW_MAX_CHARS = 600
+
+
+def _ensure_generation_enabled(client: Client) -> None:
+    """Global admin kill switch for audio generation."""
+    if not feature_flags_service.is_enabled(client, "generation_enabled", True):
+        raise ConflictError(
+            "Audio generation is temporarily paused for maintenance. Please try again soon.",
+            code="generation_paused",
+        )
 
 
 # --------------------------------------------------------------------------- #
@@ -93,6 +103,7 @@ def _build_voice(client: Client, user_id: str, project: dict[str, Any]):
 # Preview (synchronous, short)
 # --------------------------------------------------------------------------- #
 def generate_preview(client: Client, user_id: str, project_id: str) -> dict[str, Any]:
+    _ensure_generation_enabled(client)
     usage_service.check_rate_limit(client, user_id, "preview")
     project = projects_service.get_project(client, user_id, project_id)
     texts, controls, _gap, _norm = _plan(client, user_id, project)
@@ -124,6 +135,7 @@ def generate_preview(client: Client, user_id: str, project_id: str) -> dict[str,
 # --------------------------------------------------------------------------- #
 def start_generation(client: Client, user_id: str, project_id: str) -> dict[str, Any]:
     """Create (or resume) a full generation job. Returns the job row."""
+    _ensure_generation_enabled(client)
     usage_service.check_rate_limit(client, user_id, "generate")
     project = projects_service.get_project(client, user_id, project_id)
 

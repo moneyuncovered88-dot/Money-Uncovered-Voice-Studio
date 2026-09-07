@@ -16,7 +16,7 @@ from supabase import Client
 
 from app.errors import QuotaError
 from app.logging_config import get_logger
-from app.services import jobs_service, plans, rate_limit
+from app.services import feature_flags_service, jobs_service, plans, rate_limit
 
 logger = get_logger("app.usage")
 
@@ -153,7 +153,7 @@ def usage_summary(client: Client, user_id: str) -> dict[str, Any]:
             "characters_remaining": remaining,
             "percent_used": pct,
         },
-        "ads_enabled": plan.ads,
+        "ads_enabled": plan.ads and feature_flags_service.is_enabled(client, "ads_enabled", True),
         "period_start": _period_start().isoformat(),
         "next_reset": _next_reset().isoformat(),
     }

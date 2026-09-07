@@ -12,6 +12,17 @@ from app.services import plans, support_service, usage_service
 router = APIRouter(tags=["account"])
 
 
+@router.get("/me")
+def me(user: CurrentUserDep, client: SupabaseDep) -> dict:
+    return {
+        "id": user.id,
+        "email": user.email,
+        "email_verified": user.email_verified,
+        "is_admin": user.is_admin,
+        "plan": usage_service.get_plan_key(client, user.id),
+    }
+
+
 @router.get("/usage/summary")
 def usage_summary(user: CurrentUserDep, client: SupabaseDep) -> dict:
     return usage_service.usage_summary(client, user.id)

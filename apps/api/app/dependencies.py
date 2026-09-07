@@ -32,6 +32,7 @@ class CurrentUser(BaseModel):
     id: str
     email: str | None = None
     email_verified: bool = True
+    is_admin: bool = False
 
 
 def _claims_email_verified(claims: dict) -> bool:
@@ -124,10 +125,12 @@ def get_current_user(
     if not user_id:
         raise AuthError("Token missing subject claim")
 
+    email = claims.get("email")
     return CurrentUser(
         id=user_id,
-        email=claims.get("email"),
+        email=email,
         email_verified=_claims_email_verified(claims),
+        is_admin=settings.is_admin(email),
     )
 
 
@@ -143,6 +146,15 @@ def get_verified_user(
     return user
 
 
+def get_admin_user(
+    user: Annotated[CurrentUser, Depends(get_current_user)],
+) -> CurrentUser:
+    """Require an admin (email listed in ADMIN_EMAILS)."""
+    if not user.is_admin:
+        raise ForbiddenError("Admin access required.", code="admin_only")
+    return user
+
+
 def get_supabase() -> Client:
     """Provide the service-role Supabase client."""
     return get_service_client()
@@ -150,5 +162,6 @@ def get_supabase() -> Client:
 
 CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]
 VerifiedUserDep = Annotated[CurrentUser, Depends(get_verified_user)]
+AdminUserDep = Annotated[CurrentUser, Depends(get_admin_user)]
 SupabaseDep = Annotated[Client, Depends(get_supabase)]
 SettingsDep = Annotated[Settings, Depends(get_settings)]
