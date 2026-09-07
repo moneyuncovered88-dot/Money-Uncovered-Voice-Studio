@@ -9,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { api } from "@/lib/api";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const redirectTo = params.get("redirect") || "/dashboard";
+  const explicitRedirect = params.get("redirect");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,7 +34,17 @@ function LoginForm() {
         return;
       }
       toast.success("Signed in");
-      router.push(redirectTo);
+      // Honor an explicit ?redirect=, otherwise send admins straight to /admin.
+      let destination = explicitRedirect || "/dashboard";
+      if (!explicitRedirect) {
+        try {
+          const me = await api.account.me();
+          if (me.is_admin) destination = "/admin";
+        } catch {
+          // fall back to the app on any lookup failure
+        }
+      }
+      router.push(destination);
       router.refresh();
     } catch {
       setError("Unable to reach the authentication service. Check your configuration.");
