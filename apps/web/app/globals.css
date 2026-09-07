@@ -158,3 +158,35 @@ body {
   .mus-bar-anim { animation: none !important; }
   .mus-tilt:hover { transform: none; }
 }
+
+/* ===========================================================================
+   Craft details — the small things that separate hand-made from generated
+   =========================================================================== */
+::selection {
+  background: hsl(var(--primary) / 0.25);
+  color: hsl(var(--foreground));
+}
+
+/* A single, consistent focus ring everywhere keyboard users land. */
+:where(a, button, input, textarea, select, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid hsl(var(--ring) / 0.6);
+  outline-offset: 2px;
+  border-radius: calc(var(--radius) - 4px);
+}
+
+/* Inputs settle into a clear focused state instead of a flat box. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: hsl(var(--ring) / 0.7);
+  box-shadow: 0 0 0 3px hsl(var(--ring) / 0.15);
+}
+
+/* Section eyebrow label — small caps, tracked, used to head settings groups. */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}

@@ -3,19 +3,20 @@
 import { useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
 
+import { applyThemeClass, effectiveIsLight, THEME_KEY } from "@/lib/theme";
 import { usePersistentValue } from "@/lib/use-persistent-value";
 import { cn } from "@/lib/utils";
 
 /** Sidebar-footer theme switch. Persists to localStorage; defaults to dark. */
 export function ThemeToggle({ collapsed = false }: { collapsed?: boolean }) {
-  const [theme, setTheme] = usePersistentValue("mus-theme", "dark");
-  const isLight = theme === "light";
+  const [theme, setTheme] = usePersistentValue(THEME_KEY, "dark");
+  const isLight = effectiveIsLight(theme);
 
   // Keep the DOM in sync with the stored theme (updating an external system —
   // the document class — is exactly what effects are for).
   useEffect(() => {
-    document.documentElement.classList.toggle("light", isLight);
-  }, [isLight]);
+    applyThemeClass(theme);
+  }, [theme]);
 
   return (
     <button
