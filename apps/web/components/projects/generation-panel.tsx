@@ -324,9 +324,18 @@ function ChunkRow({ chunk, onChanged }: { chunk: Chunk; onChanged: () => void })
     }
   }
 
+  const tone =
+    chunk.status === "generated"
+      ? "bg-primary/10 text-primary ring-primary/20"
+      : chunk.status === "failed"
+        ? "bg-destructive/10 text-destructive ring-destructive/20"
+        : "bg-muted text-muted-foreground ring-border";
+
   return (
-    <div className="flex items-start gap-3 rounded-md border border-border p-3">
-      <span className="mt-0.5 text-xs font-medium tabular-nums text-muted-foreground">
+    <div className="flex items-start gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary/30 hover:bg-muted/30">
+      <span
+        className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold tabular-nums ring-1 ${tone}`}
+      >
         {String(chunk.chunk_index + 1).padStart(2, "0")}
       </span>
       <div className="min-w-0 flex-1">
