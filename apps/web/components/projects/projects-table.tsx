@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Copy, Download, MoreHorizontal, Trash2 } from "lucide-react";
+import { AudioLines, Copy, Download, MoreHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
@@ -75,12 +75,19 @@ export function ProjectsTable({ projects, voiceName, onChanged }: ProjectsTableP
           return (
             <TableRow key={p.id}>
               <TableCell>
-                <Link href={`/projects/${p.id}`} className="font-medium hover:text-primary">
-                  {p.title}
-                </Link>
-                {p.video_title ? (
-                  <p className="truncate text-xs text-muted-foreground">{p.video_title}</p>
-                ) : null}
+                <div className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
+                    <AudioLines className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <Link href={`/projects/${p.id}`} className="font-medium hover:text-primary">
+                      {p.title}
+                    </Link>
+                    {p.video_title ? (
+                      <p className="truncate text-xs text-muted-foreground">{p.video_title}</p>
+                    ) : null}
+                  </div>
+                </div>
               </TableCell>
               <TableCell>
                 <StatusBadge status={p.status} />
