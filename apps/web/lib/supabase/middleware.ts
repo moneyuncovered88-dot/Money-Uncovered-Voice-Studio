@@ -6,6 +6,8 @@ type CookieToSet = { name: string; value: string; options?: CookieOptions };
 const PUBLIC_PREFIXES = ["/login", "/signup", "/auth"];
 
 function isPublicPath(pathname: string): boolean {
+  // The marketing landing at "/" is public to everyone.
+  if (pathname === "/") return true;
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
