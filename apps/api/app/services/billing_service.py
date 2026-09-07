@@ -85,9 +85,11 @@ def create_checkout(
         )
 
     stripe = _stripe()
-    customer_id = _get_or_create_customer(stripe, client, user_id, email)
     base = settings.frontend_url.rstrip("/")
+    # Wrap the whole Stripe interaction so any failure (bad key, unknown price,
+    # test/live mismatch) becomes a clean, CORS-safe error the UI can display.
     try:
+        customer_id = _get_or_create_customer(stripe, client, user_id, email)
         session = stripe.checkout.Session.create(
             mode="subscription",
             customer=customer_id,
@@ -98,8 +100,13 @@ def create_checkout(
             metadata={"user_id": user_id, "plan": plan, "period": period},
             allow_promotion_codes=True,
         )
+    except UpstreamError:
+        raise
     except Exception as exc:  # noqa: BLE001
-        raise UpstreamError(f"Stripe checkout failed: {exc}", code="stripe_error") from exc
+        logger.warning("stripe checkout failed: %s", exc)
+        raise UpstreamError(
+            f"Stripe checkout failed: {exc}", code="stripe_error", status_code=502
+        ) from exc
     return session.url
 
 
@@ -118,9 +125,12 @@ def create_portal(client: Client, user_id: str) -> str:
     if not customer_id:
         raise QuotaError("No billing account yet — upgrade to a paid plan first.")
     base = settings.frontend_url.rstrip("/")
-    session = stripe.billing_portal.Session.create(
-        customer=customer_id, return_url=f"{base}/plans"
-    )
+    try:
+        session = stripe.billing_portal.Session.create(
+            customer=customer_id, return_url=f"{base}/plans"
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise UpstreamError(f"Stripe portal failed: {exc}", code="stripe_error", status_code=502) from exc
     return session.url
 
 

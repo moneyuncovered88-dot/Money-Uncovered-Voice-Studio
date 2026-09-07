@@ -99,7 +99,13 @@ export default function PlansPage() {
       if (e instanceof ApiRequestError && e.status === 503) {
         toast.info("Billing isn't enabled yet — check back soon.");
       } else {
-        toast.error(e instanceof ApiRequestError ? e.message : "Could not start checkout.");
+        const msg =
+          e instanceof ApiRequestError
+            ? e.message
+            : e instanceof Error
+              ? e.message
+              : "Could not start checkout.";
+        toast.error(msg);
       }
     } finally {
       setBusy(null);
