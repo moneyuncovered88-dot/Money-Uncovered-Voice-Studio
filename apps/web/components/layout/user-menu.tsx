@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,8 +14,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useApiData } from "@/hooks/use-api-data";
-import { api } from "@/lib/api";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export function UserMenu({
@@ -29,7 +26,6 @@ export function UserMenu({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const initial = (email ?? "?").charAt(0).toUpperCase();
-  const { data: me } = useApiData(() => api.account.me(), []);
 
   async function signOut() {
     setLoading(true);
@@ -64,14 +60,6 @@ export function UserMenu({
       <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuLabel className="truncate">{email ?? "Signed in"}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {me?.is_admin ? (
-          <DropdownMenuItem asChild>
-            <Link href="/admin">
-              <Shield className="h-4 w-4" />
-              Admin console
-            </Link>
-          </DropdownMenuItem>
-        ) : null}
         <DropdownMenuItem onClick={signOut} disabled={loading}>
           <LogOut className="h-4 w-4" />
           {loading ? "Signing out…" : "Sign out"}
