@@ -57,6 +57,26 @@ class Settings(BaseSettings):
     modal_endpoint_url: str = ""
     modal_token: str = ""
 
+    # Stripe billing (optional — everything works without it; checkout is only
+    # enabled once these are set). Price IDs map a plan+period to a Stripe price.
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    frontend_url: str = "http://localhost:3000"
+    stripe_price_starter_monthly: str = ""
+    stripe_price_starter_yearly: str = ""
+    stripe_price_pro_monthly: str = ""
+    stripe_price_pro_yearly: str = ""
+    stripe_price_business_monthly: str = ""
+    stripe_price_business_yearly: str = ""
+
+    @property
+    def stripe_configured(self) -> bool:
+        return bool(self.stripe_secret_key)
+
+    def stripe_price_id(self, plan: str, period: str) -> str:
+        key = f"stripe_price_{plan}_{period}".lower()
+        return str(getattr(self, key, "") or "")
+
     # Storage
     signed_url_expiry: int = 3600
 

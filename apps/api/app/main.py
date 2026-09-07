@@ -16,6 +16,7 @@ from app import __version__
 from app.api.routes import (
     account,
     admin,
+    billing,
     config,
     generation,
     health,
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
     app.include_router(config.router, prefix=API_PREFIX)
     app.include_router(account.router, prefix=API_PREFIX)
     app.include_router(admin.router, prefix=API_PREFIX)
+    app.include_router(billing.router, prefix=API_PREFIX)
 
     @app.get("/")
     def root() -> dict[str, str]:

@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { Check } from "lucide-react";
+import { toast } from "sonner";
 
 import { PageHeader } from "@/components/common/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { api, ApiRequestError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 type Plan = {
@@ -86,6 +88,23 @@ const PLANS: Plan[] = [
 
 export default function PlansPage() {
   const [yearly, setYearly] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function upgrade(planKey: string) {
+    setBusy(planKey);
+    try {
+      const { url } = await api.billing.checkout(planKey, yearly ? "yearly" : "monthly");
+      window.location.assign(url);
+    } catch (e) {
+      if (e instanceof ApiRequestError && e.status === 503) {
+        toast.info("Billing isn't enabled yet — check back soon.");
+      } else {
+        toast.error(e instanceof ApiRequestError ? e.message : "Could not start checkout.");
+      }
+    } finally {
+      setBusy(null);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -153,9 +172,10 @@ export default function PlansPage() {
                 <Button
                   variant={plan.highlight ? "gold" : plan.key === "free" ? "outline" : "default"}
                   className="mt-auto w-full"
-                  disabled={plan.key === "free"}
+                  disabled={plan.key === "free" || busy !== null}
+                  onClick={() => (plan.key === "free" ? undefined : upgrade(plan.key))}
                 >
-                  {plan.cta}
+                  {busy === plan.key ? "Starting…" : plan.cta}
                 </Button>
               </CardContent>
             </Card>

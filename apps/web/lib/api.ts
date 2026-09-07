@@ -172,6 +172,15 @@ export const api = {
     createTicket: (body: { topic?: string | null; message: string }) =>
       apiFetch<{ id: string }>("/support/tickets", { method: "POST", body: json(body) }),
   },
+  billing: {
+    status: () => apiFetch<{ configured: boolean }>("/billing/status"),
+    checkout: (plan: string, period: "monthly" | "yearly") =>
+      apiFetch<{ url: string }>("/billing/checkout", {
+        method: "POST",
+        body: json({ plan, period }),
+      }),
+    portal: () => apiFetch<{ url: string }>("/billing/portal", { method: "POST" }),
+  },
   admin: {
     overview: () => apiFetch<AdminOverview>("/admin/overview"),
     jobs: (status?: string) =>

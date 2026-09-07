@@ -109,3 +109,52 @@ body {
   border: 2px solid transparent;
   background-clip: content-box;
 }
+
+/* ===========================================================================
+   Marketing / landing-page animations (3D, premium)
+   =========================================================================== */
+@keyframes mus-float {
+  0%, 100% { transform: translateY(0) rotateX(0) rotateY(0); }
+  50% { transform: translateY(-14px) rotateX(4deg) rotateY(-3deg); }
+}
+@keyframes mus-float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-22px); }
+}
+@keyframes mus-spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes mus-gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes mus-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes mus-bar {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+@keyframes mus-pulse-ring {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.mus-float { animation: mus-float 6s ease-in-out infinite; }
+.mus-float-slow { animation: mus-float-slow 8s ease-in-out infinite; }
+.mus-spin-slow { animation: mus-spin-slow 26s linear infinite; }
+.mus-rise { animation: mus-rise 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+.mus-gradient-anim {
+  background-size: 200% 200%;
+  animation: mus-gradient 12s ease infinite;
+}
+.mus-3d { transform-style: preserve-3d; perspective: 1000px; }
+.mus-tilt { transition: transform 0.35s cubic-bezier(0.22,1,0.36,1); transform-style: preserve-3d; }
+.mus-tilt:hover { transform: rotateX(6deg) rotateY(-6deg) translateY(-6px); }
+@media (prefers-reduced-motion: reduce) {
+  .mus-float, .mus-float-slow, .mus-spin-slow, .mus-rise, .mus-gradient-anim,
+  .mus-bar-anim { animation: none !important; }
+  .mus-tilt:hover { transform: none; }
+}
