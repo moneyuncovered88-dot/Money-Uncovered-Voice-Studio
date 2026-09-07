@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AudioLines } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,7 @@ export function Brand({ className, collapsed = false }: { className?: string; co
       className={cn("flex items-center gap-2.5", className)}
     >
       <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/15 ring-1 ring-primary/30">
-        <span className="h-3 w-3 rounded-sm bg-primary" />
+        <AudioLines className="h-4 w-4 text-primary" />
         <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-gold" />
       </span>
       {!collapsed ? (

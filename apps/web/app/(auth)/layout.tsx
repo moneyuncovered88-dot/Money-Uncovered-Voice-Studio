@@ -10,7 +10,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </div>
       <div className="w-full max-w-sm">{children}</div>
       <p className="mt-8 max-w-sm text-center text-xs text-muted-foreground">
-        Private studio for Money Uncovered narration. Access is restricted to authorized accounts.
+        MUS Voices — a creator-first AI voice studio for long-form narration.
       </p>
     </div>
   );
