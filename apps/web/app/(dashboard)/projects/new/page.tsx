@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Info } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Clock, Hash, Info, Layers, Trash2, Type, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/common/page-header";
@@ -26,9 +26,36 @@ import { formatDuration } from "@/lib/format";
 import type { Preset, ScriptAnalysis, Voice } from "@/types/api";
 
 const NO_VOICE = "none";
+const DRAFT_KEY = "mus-draft-new";
+
+interface Draft {
+  title?: string;
+  videoTitle?: string;
+  script?: string;
+  notes?: string;
+  preset?: string;
+  speakHeadings?: boolean;
+}
+
+function readDraft(): Draft {
+  try {
+    return JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}") as Draft;
+  } catch {
+    return {};
+  }
+}
+
+function defaultPreset(): string {
+  try {
+    return localStorage.getItem("mus-default-preset") || "mu_storyteller";
+  } catch {
+    return "mu_storyteller";
+  }
+}
 
 export default function NewNarrationPage() {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const { data } = useApiData<{ voices: Voice[]; presets: Preset[] }>(async () => {
     const [voices, presets] = await Promise.all([api.voices.list(), api.config.presets()]);
@@ -37,22 +64,28 @@ export default function NewNarrationPage() {
   const voices = data?.voices ?? [];
   const presets = data?.presets ?? [];
 
-  const [title, setTitle] = useState("");
-  const [videoTitle, setVideoTitle] = useState("");
+  const [title, setTitle] = useState(() => readDraft().title ?? "");
+  const [videoTitle, setVideoTitle] = useState(() => readDraft().videoTitle ?? "");
   const [voiceId, setVoiceId] = useState<string>(NO_VOICE);
-  const [preset, setPreset] = useState(() => {
-    try {
-      return localStorage.getItem("mus-default-preset") || "mu_storyteller";
-    } catch {
-      return "mu_storyteller";
-    }
-  });
-  const [script, setScript] = useState("");
-  const [notes, setNotes] = useState("");
-  const [speakHeadings, setSpeakHeadings] = useState(false);
+  const [preset, setPreset] = useState(() => readDraft().preset ?? defaultPreset());
+  const [script, setScript] = useState(() => readDraft().script ?? "");
+  const [notes, setNotes] = useState(() => readDraft().notes ?? "");
+  const [speakHeadings, setSpeakHeadings] = useState(() => readDraft().speakHeadings ?? false);
   const [submitting, setSubmitting] = useState(false);
-
   const [analysis, setAnalysis] = useState<ScriptAnalysis | null>(null);
+
+  // Autosave the draft to localStorage as the user types (external write — no
+  // setState, so it's an appropriate effect).
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ title, videoTitle, script, notes, preset, speakHeadings }),
+      );
+    } catch {
+      // storage unavailable — drafting still works in-memory
+    }
+  }, [title, videoTitle, script, notes, preset, speakHeadings]);
 
   const runAnalyze = useDebouncedCallback(async (text: string, presetKey: string, sh: boolean) => {
     if (!text.trim()) {
@@ -60,20 +93,34 @@ export default function NewNarrationPage() {
       return;
     }
     try {
-      const result = await api.projects.analyze({
-        script: text,
-        narration_preset: presetKey,
-        speak_headings: sh,
-      });
-      setAnalysis(result);
+      setAnalysis(await api.projects.analyze({ script: text, narration_preset: presetKey, speak_headings: sh }));
     } catch {
-      // Analysis is best-effort; ignore transient failures.
+      // best-effort
     }
   }, 600);
 
   useEffect(() => {
     runAnalyze(script, preset, speakHeadings);
   }, [script, preset, speakHeadings, runAnalyze]);
+
+  async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1_000_000) {
+      toast.error("Text file is too large (max 1 MB).");
+      return;
+    }
+    try {
+      const text = await file.text();
+      setScript(text);
+      if (!title.trim()) setTitle(file.name.replace(/\.[^.]+$/, ""));
+      toast.success("Script imported");
+    } catch {
+      toast.error("Could not read that file.");
+    } finally {
+      e.target.value = "";
+    }
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -92,6 +139,11 @@ export default function NewNarrationPage() {
         notes: notes || null,
         speak_headings: speakHeadings,
       });
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* ignore */
+      }
       toast.success("Project created");
       router.push(`/projects/${created.id}`);
     } catch (e) {
@@ -101,11 +153,18 @@ export default function NewNarrationPage() {
     }
   }
 
+  const metrics = [
+    { icon: Type, value: analysis?.word_count ?? 0, label: "words" },
+    { icon: Hash, value: analysis?.character_count ?? script.length, label: "characters" },
+    { icon: Clock, value: `~${formatDuration(analysis?.estimated_duration_seconds ?? 0)}`, label: "est. length" },
+    { icon: Layers, value: analysis?.chunk_count ?? 0, label: "chunks" },
+  ];
+
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <PageHeader
-        title="New Narration"
-        description="Create a project, paste your script, and pick a voice. You'll Preview and Generate on the next screen."
+        title="Studio"
+        description="Compose a narration project. You'll Preview and Generate on the next screen."
         actions={
           <Button type="submit" disabled={submitting}>
             {submitting ? "Creating…" : "Create & Continue"}
@@ -119,45 +178,46 @@ export default function NewNarrationPage() {
             <CardHeader>
               <CardTitle>Project details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="title">Project name</Label>
-                <Input
-                  id="title"
-                  placeholder="Day 1 – Credit Cards Took Over America"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
+                <Input id="title" placeholder="Day 1 – Credit Cards Took Over America" value={title} onChange={(e) => setTitle(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="videoTitle">Video title</Label>
-                <Input
-                  id="videoTitle"
-                  placeholder="How Credit Cards Quietly Took Over America"
-                  value={videoTitle}
-                  onChange={(e) => setVideoTitle(e.target.value)}
-                />
+                <Input id="videoTitle" placeholder="How Credit Cards Quietly Took Over America" value={videoTitle} onChange={(e) => setVideoTitle(e.target.value)} />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle>Script</CardTitle>
+              <div className="flex items-center gap-1.5">
+                <input ref={fileRef} type="file" accept=".txt,.md,text/plain" hidden onChange={onUpload} />
+                <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                  <Upload className="h-4 w-4" /> Import .txt
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={() => setScript("")} disabled={!script}>
+                  <Trash2 className="h-4 w-4" /> Clear
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <Textarea
-                className="min-h-[340px] font-mono text-sm leading-relaxed"
-                placeholder="Paste your Money Uncovered narration script here…"
+                className="min-h-[360px] font-mono text-sm leading-relaxed"
+                placeholder="Paste your narration script here, or import a .txt file…"
                 value={script}
                 onChange={(e) => setScript(e.target.value)}
               />
-              <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
-                <span>{analysis?.word_count ?? 0} words</span>
-                <span>{analysis?.character_count ?? script.length} characters</span>
-                <span>~{formatDuration(analysis?.estimated_duration_seconds ?? 0)} est. duration</span>
-                <span>{analysis?.chunk_count ?? 0} chunks</span>
+              <div className="flex flex-wrap items-center gap-4 border-t border-border pt-3">
+                {metrics.map(({ icon: Icon, value, label }) => (
+                  <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Icon className="h-3.5 w-3.5 text-primary/70" />
+                    <span className="font-medium text-foreground">{value}</span> {label}
+                  </div>
+                ))}
+                <span className="ml-auto text-xs text-muted-foreground">Autosaved as you type</span>
               </div>
             </CardContent>
           </Card>
@@ -185,9 +245,7 @@ export default function NewNarrationPage() {
                   </SelectContent>
                 </Select>
                 {voices.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">
-                    No voices yet — add one on the Voices page.
-                  </p>
+                  <p className="text-xs text-muted-foreground">No voices yet — add one on the Voices page.</p>
                 ) : null}
               </div>
 
@@ -205,23 +263,15 @@ export default function NewNarrationPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  {presets.find((p) => p.key === preset)?.description}
-                </p>
+                <p className="text-xs text-muted-foreground">{presets.find((p) => p.key === preset)?.description}</p>
               </div>
 
               <div className="flex items-center justify-between rounded-md border border-border p-3">
                 <div className="space-y-0.5">
                   <Label htmlFor="speakHeadings">Speak section headings</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Read lines like &quot;SECTION 1&quot; aloud.
-                  </p>
+                  <p className="text-xs text-muted-foreground">Read lines like &quot;SECTION 1&quot; aloud.</p>
                 </div>
-                <Switch
-                  id="speakHeadings"
-                  checked={speakHeadings}
-                  onCheckedChange={setSpeakHeadings}
-                />
+                <Switch id="speakHeadings" checked={speakHeadings} onCheckedChange={setSpeakHeadings} />
               </div>
             </CardContent>
           </Card>
@@ -231,11 +281,7 @@ export default function NewNarrationPage() {
               <CardTitle>Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <Textarea
-                placeholder="Optional production notes…"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
+              <Textarea placeholder="Optional production notes…" value={notes} onChange={(e) => setNotes(e.target.value)} />
             </CardContent>
           </Card>
 
