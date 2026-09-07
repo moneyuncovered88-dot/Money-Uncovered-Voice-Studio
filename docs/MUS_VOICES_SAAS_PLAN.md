@@ -58,7 +58,9 @@ It maps each area to what the codebase **already has**, what is **partial**, and
 
 **Phase 4 — Monetization & safety:** ✅ quota enforcement; abuse protection (per-plan rate limits, concurrency cap, daily generation cap, email-verify gate); optional Turnstile CAPTCHA on signup; free-user ad slots. Real AdSense units still to drop in.
 
-**Phase 5 — Billing:** Stripe integration architecture (checkout, webhooks, plan sync) — usable even if staged.
+**Phase 5 — Billing:** ✅ scaffolding complete (inert until keys). billing_service (checkout, customer portal, webhook -> user_subscriptions sync), /billing routes, Plans "Upgrade" wired to Stripe checkout with graceful "coming soon". Add STRIPE_SECRET_KEY + price IDs + STRIPE_WEBHOOK_SECRET to activate.
+
+**Landing:** ✅ public 3D-animated marketing page at `/` (hero waveform, tilt cards, pricing, CTA).
 
 **Phase 6 — Admin:** ✅ role-based admin (ADMIN_EMAILS). Overview (active/failed jobs, GPU cost, MRR estimate, plan distribution), Jobs, Users (Auth admin API), Tickets, Feature flags (ads/signups/generation kill switch). Sidebar shows Admin only for admins.
 
